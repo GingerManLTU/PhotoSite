@@ -1,0 +1,357 @@
+:root
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif
+  font-size: 16px
+  line-height: 24px
+  font-weight: 400
+
+  color-scheme: light dark
+  color: rgba(255, 255, 255, 0.87)
+  background-color: #242424
+
+  font-synthesis: none
+  text-rendering: optimizeLegibility
+  -webkit-font-smoothing: antialiased
+  -moz-osx-font-smoothing: grayscale
+  -webkit-text-size-adjust: 100%
+
+*, *:before, *:after
+    box-sizing: border-box
+
+html, body, div, span, object, iframe, figure, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, code, em, img, small, strike, strong, sub, sup, tt, b, u, i, ol, ul, li, fieldset, form, label, table, caption, tbody, tfoot, thead, tr, th, td, main, canvas, embed, footer, header, nav, section, video
+    margin: 0
+    padding: 0
+    font-size: 100%
+    font: inherit
+    vertical-align: baseline
+    text-rendering: optimizeLegibility
+    -webkit-font-smoothing: antialiased
+    text-size-adjust: none
+
+footer, header, nav, section, main
+    display: block
+
+body
+    line-height: 1
+
+ol, ul
+    list-style: none
+
+blockquote, q
+    quotes: none
+
+blockquote:before, blockquote:after, q:before, q:after
+    content: ''
+    content: none
+
+table
+    border-collapse: collapse
+    border-spacing: 0
+
+a 
+  font-weight: 500
+  color: #646cff
+  text-decoration: inherit
+
+a:hover 
+  color: #535bf2
+
+
+body 
+  margin: 0
+  display: flex
+  place-items: center
+  min-width: 320px
+  min-height: 100vh
+
+
+h1 
+  font-size: 3.2em
+  line-height: 1.1
+
+
+button 
+  width: 80px
+  padding: 20px
+  background-color: transparent
+  border: 1px solid white
+  border-radius: 24px
+  height: 30px
+  transition: all .2s ease-in-out
+  &:hover
+    transform: scale(1.02)
+    box-shadow: 0px 2px 10px 4px #E4E7EC
+
+
+button:hover 
+  border-color: #646cff
+
+button:focus,
+button:focus-visible 
+  outline: 4px auto -webkit-focus-ring-color
+
+
+.card 
+  padding: 2em
+
+
+#app 
+  margin: 0 auto
+
+input
+  padding: 20px
+  background-color: transparent
+  border: 1px solid white
+  border-radius: 24px
+  height: 30px
+  transition: all .2s ease-in-out
+  &:hover
+    transform: scale(1.02)
+    box-shadow: 0px 2px 10px 4px #E4E7EC
+::-moz-placeholder
+    color: white
+    padding: 0 10px
+  
+
+@media (prefers-color-scheme: light) 
+  :root 
+    color: #213547
+    background-color: #ffffff
+  
+  a:hover 
+    color: #747bff
+  
+  button 
+    background-color: #f9f9f9
+
+//LOGIN & REGISTER STYLES
+
+.wrapper-login
+  min-height: 100%
+  background: url("../assets/loginPage.jpg")
+  position: absolute
+  top: 0px
+  right: 0px
+  bottom: 0px
+  left: 0px
+
+.login-form-wrapper 
+  width: 20%
+  background-color: rgba(255, 230, 242, 0.43)
+  backdrop-filter: blur(10px)
+  min-width: 320px
+  border-radius: 20px
+  justify-content: center
+  display: flex
+  padding:30px 0
+  max-height: 450px
+  position: relative
+
+.login-form 
+  margin: 0 auto
+  text-align: center
+
+.submit-button 
+  margin: 30px
+  padding: 0 10px
+  cursor: pointer
+  border: 1px solid white
+  border-radius: 24px
+  &:hover
+    border: 1px solid white
+
+.login-text 
+  display: flex
+  padding-left: 60px
+  min-width: 320px
+  flex-direction: column
+  max-width: calc(100% - 80px)
+  justify-content: center
+  align-items: flex-start
+
+.register-form-wrapper 
+  width: 20%
+  background-color: rgba(255, 230, 242, 0.43)
+  backdrop-filter: blur(10px)
+  position: absolute
+  top: 50%
+  left: 50%
+  transform: translate(-50%, -50%)
+  padding: 30px
+  min-width: 320px
+  border-radius: 20px
+
+.login-input
+  padding: 20px
+  background-color: transparent
+  border: 1px solid white
+  border-radius: 24px
+  height: 30px
+  transition: all .2s ease-in-out
+  &:hover, &:focus-visible
+    transform: scale(1.02)
+    box-shadow: 0px 2px 10px 4px #E4E7EC
+    outline: none
+::-moz-placeholder
+    color: white
+    padding: 0 10px
+
+.login-position
+  height: 100%
+  display: flex
+  justify-content: center
+  align-items: center
+  padding: 20px
+    
+//NAVBAR Styling
+
+.navigation-header
+  background-color: rgba(0,0,0,0.2)
+  z-index: 99
+  width: 100%
+  position: fixed
+  transition: 0.5s ease all
+  color: #ffffff
+  .navigation-dropdown
+    transition: 0.5s ease all
+
+.navigation-nav
+  position: relative
+  display: flex
+  flex-direction: row
+  padding-top: 12px
+  transition: 0.5s ease all
+  width: 90%
+  margin: 0 auto
+  $display: 1000px
+  @media (min-width: $display) 
+     max-width: $display
+
+.navigation-link
+  font-size: 14px
+  transition: 0.5s ease all
+  padding-bottom: 4px
+  border-bottom: 1px solid transparent 
+  &:hover
+    color: #00afea
+    border-color:#00afea   
+.nagivation-li
+  text-transform: uppercase
+  padding: 16px
+  margin-left: 16px
+
+.navigation-branding
+  display: flex
+  align-items: center
+
+.logo-active
+  position: relative
+  left: 70px
+
+.navigation-icon
+  display: flex
+  position: absolute
+  align-items: center
+  top: 0
+  left: px
+  height: 100%
+
+.navigation-titles
+  display: flex
+  align-items: center
+  flex: 1
+  justify-content: flex-end
+
+.icon-active
+  transform: rotate(180deg)
+
+.icon-element
+  width: 40px !important
+  cursor: pointer
+  font-size: 24px
+  transition: 0.8s ease all
+
+.navigation-dropdown
+  padding-top: 24px
+  margin-top: 70px
+  display: flex
+  flex-direction: column
+  position: fixed
+  width: 100%
+  max-width: 200px
+  height: 100%
+  background-image: linear-gradient( 109.6deg, rgba(142,219,219,255) 11.2%, #6ab3b3 91.1% )
+  top: 0
+  left: 0
+
+.scrolled-navigation
+  background-image: linear-gradient( 109.6deg, rgba(142,219,219,255) 11.2%, #6ab3b3 91.1% )
+  box-shadow: 0 4px 6px -1px rbga(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)
+  .navigation-nav
+    padding: 8px 0
+
+    .navigation-branding
+      img
+        width: 40px
+        box-shadow: 0 4px 6px -1px rbga(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)
+    .navigation-dropdown
+      margin-top: 46px
+      transition: 0.5s ease all
+
+.mobile-nav-enter-active,
+.mobile-nav-leave-active 
+  transition: 1s ease all
+
+.mobile-nav-enter-from,
+.mobile-nav-leave-to
+  transform: translateX(-250px)
+
+.mobile-nav-enter-to 
+  transform: translateX(0)
+
+.navigation-flexbox
+  display: grid
+  grid-template-columns: repeat(2, 1fr)
+  position: relative
+  height: 100%
+  @media (max-width: 750px)
+    grid-template-columns: repeat(1, 1fr)
+    .login-text 
+      align-items: center
+      padding-left: 0
+    .main-text
+      text-align: center
+      max-width: 350px
+    
+
+//dropdown
+
+
+.dropdown-content 
+  display: none
+  position: absolute
+  background-color: rgba(0,0,0,0.15)
+  min-width: 100px
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2)
+  z-index: 1
+  margin-top: 10px
+
+.dropdown-content a
+  float: none
+  color: white
+  padding: 12px 16px
+  text-decoration: none
+  display: block
+  text-align: left
+
+.dropdown-content a
+  &:hover
+    background-color: #ddd
+
+.dropdown 
+  float: left
+  overflow: hidden
+  height: 55px
+  &:hover
+    .dropdown-content
+      display: block !important
+  

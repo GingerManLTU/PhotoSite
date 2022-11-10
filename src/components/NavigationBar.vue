@@ -29,8 +29,8 @@
             <div class="ml-3 dropdown">
                 <v-avatar image="src/assets/avatar.jpg" size="45"></v-avatar>
                 <div class="dropdown-content">
-                    <a href="#">Link 1</a>
-                    <a href="#">Link 2</a>
+                    <a href="#">Profile</a>
+                    <a href="#">Gallery</a>
                     <a @click="Logout">Logout</a>
                 </div>
             </div>
@@ -84,37 +84,29 @@ export default {
 </script>
 <script setup>
 import { useRouter } from "vue-router"
-import { StytchUIClient } from "@stytch/vanilla-js"
+import { onMounted, ref } from "vue"
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth"
 
-const stytch = new StytchUIClient("public-token-test-f064f5ec-8805-44ee-b671-27528b66fda4")
+const isLoggedIn = ref(false)
+
+let auth
+onMounted(() => {
+    auth = getAuth()
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            isLoggedIn.value = true
+        } else {
+            isLoggedIn.value = false
+        }
+    })
+})
 
 const router = useRouter()
 
 const Logout = async () => {
-    let session = stytch.session.getSync()
-
-    if (session === null) {
+    signOut(auth).then(() => {
         router.push("/login")
-    }
-
-    console.log(session)
-
-    const res = await fetch("http://localhost:8080/logout", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            session_token: localStorage.getItem("token"),
-        }),
-    }).then((res) => res.json())
-
-    if (res.success) {
-        localStorage.removeItem("token")
-        router.push("/login")
-    } else {
-        alert(res.message)
-    }
+    })
 }
 </script>
 

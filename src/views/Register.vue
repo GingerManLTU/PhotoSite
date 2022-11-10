@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue"
 import { useRouter } from "vue-router"
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth"
 
 const router = useRouter()
 
@@ -9,31 +10,25 @@ const password = ref("")
 const c_password = ref("")
 
 const Register = async () => {
-    console.log("aaa")
     if (!email.value || !password.value || !c_password.value) {
         return alert("Please fill in all fields")
+    }
+    if (password.value.length < 6) {
+        return alert("Password must be at least 6 characters")
     }
     if (password.value !== c_password.value) {
         return alert("Passwords do not match")
     }
 
-    const res = await fetch("http://localhost:8080/register", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            email: email.value,
-            password: password.value,
-        }),
-    }).then((res) => res.json())
-
-    if (res.success) {
-        localStorage.setItem("token", res.token)
-        router.push("/")
-    } else {
-        alert(res.message)
-    }
+    createUserWithEmailAndPassword(getAuth(), email.value, password.value)
+        .then((data) => {
+            console.log("Successfully created user: " + data)
+            router.push("/")
+        })
+        .catch((error) => {
+            console.log(error.code)
+            alert(error.message)
+        })
 }
 </script>
 

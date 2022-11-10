@@ -9,7 +9,6 @@ import * as directives from "vuetify/directives"
 import { aliases, mdi } from "vuetify/iconsets/mdi"
 import "@mdi/font/css/materialdesignicons.css"
 import { initializeApp } from "firebase/app"
-import { getAnalytics } from "firebase/analytics"
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 

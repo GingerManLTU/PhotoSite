@@ -1,33 +1,54 @@
 <script setup>
 import { ref } from "vue"
 import { useRouter } from "vue-router"
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth"
 
 const router = useRouter()
 
 const email = ref("")
 const password = ref("")
+const errMsg = ref()
 
 const Login = async () => {
     if (!email.value || !password.value) {
         return alert("Please fill in all fields")
     }
-    const res = await fetch("http://localhost:8080/login", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            email: email.value,
-            password: password.value,
-        }),
-    }).then((res) => res.json())
 
-    if (res.success) {
-        localStorage.setItem("token", res.token)
-        router.push("/")
-    } else {
-        alert(res.message)
-    }
+    signInWithEmailAndPassword(getAuth(), email.value, password.value)
+        .then((data) => {
+            console.log("Successfully logged in with email and password")
+            router.push("/")
+        })
+        .catch((error) => {
+            console.log(error.code)
+            switch (error.code) {
+                case "auth/invalid-email":
+                    errMsg.value = "Invalid email"
+                    break
+                case "auth/user-not-found":
+                    errMsg.value = "This email doesn't exist"
+                    break
+                case "auth/wrong-password":
+                    errMsg.value = "Incorrect password"
+                    break
+                default:
+                    errMsg.value = "Email or password was incorrect"
+                    break
+            }
+        })
+}
+
+const signInWithGoogle = () => {
+    const provider = new GoogleAuthProvider()
+    signInWithPopup(getAuth(), provider)
+        .then((result) => {
+            console.log(result.user)
+            router.push("/")
+        })
+        .catch((error) => {
+            console.log(error)
+            alert(error.body + ": " + error.message)
+        })
 }
 </script>
 
@@ -59,7 +80,11 @@ const Login = async () => {
                                 </label>
                             </form>
                         </div>
-                        <button class="submit-button" @click="Login">Login</button>
+                        <button class="submit-button submit-button--login" @click="Login">Login</button>
+                        <p v-if="errMsg">{{ errMsg }}</p>
+                        <div>
+                            <button class="submit-button submit-button--google" @click="signInWithGoogle">Log in with Google Account</button>
+                        </div>
                         <div>
                             <p>Dont have an account? <router-link to="/register">Register</router-link></p>
                         </div>

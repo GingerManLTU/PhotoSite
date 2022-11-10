@@ -127,12 +127,16 @@ input
 
 .wrapper-login
   min-height: 100%
-  background: url("../assets/loginPage.jpg")
+  background: url("../assets/loginPage.jpg") no-repeat center center fixed
   position: absolute
   top: 0px
   right: 0px
   bottom: 0px
   left: 0px
+  -moz-background-size: cover
+  -webkit-background-size: cover
+  -o-background-size: cover
+  background-size: cover
 
 .login-form-wrapper 
   width: 20%
@@ -151,13 +155,21 @@ input
   text-align: center
 
 .submit-button 
-  margin: 30px
   padding: 0 10px
   cursor: pointer
   border: 1px solid white
-  border-radius: 24px
+  border-radius: 24px    
   &:hover
     border: 1px solid white
+  &--google
+    margin: 0 30px 20px 30px
+    min-width: 180px
+    min-height: 45px
+  &--login
+    margin: 20px
+
+
+
 
 .login-text 
   display: flex
@@ -342,10 +354,11 @@ input
   text-decoration: none
   display: block
   text-align: left
+  cursor: pointer
 
 .dropdown-content a
   &:hover
-    background-color: #ddd
+    background-color: rgba(0,0,0,0.4)
 
 .dropdown 
   float: left
@@ -354,4 +367,28 @@ input
   &:hover
     .dropdown-content
       display: block !important
+
+//HOME
   
+.wrapper-home
+  min-height: 100%
+  background: url("../assets/loginPage.jpg") no-repeat center center fixed
+  filter: blur(8px)
+  -webkit-filter: blur(8px)
+  background-repeat: no-repeat
+  position: absolute
+  top: 0px
+  right: 0px
+  bottom: 0px
+  left: 0px
+  -moz-background-size: cover
+  -webkit-background-size: cover
+  -o-background-size: cover
+  background-size: cover
+  &__block
+    min-height: 100%
+    position: absolute
+    top: 0px
+    right: 0px
+    bottom: 0px
+    left: 0px

@@ -1,10 +1,12 @@
 import { createRouter, createWebHistory } from "vue-router"
+import { getAuth, onAuthStateChanged } from "firebase/auth"
 
 const routes = [
     {
         path: "/",
         name: "Home",
         component: () => import("./views/Home.vue"),
+        //important allow just auth users
         meta: {
             requiresAuth: true,
         },
@@ -21,6 +23,19 @@ const routes = [
     },
 ]
 
+const getCurrentUser = () => {
+    return new Promise((resolve, reject) => {
+        const removeListener = onAuthStateChanged(
+            getAuth(),
+            (user) => {
+                removeListener()
+                resolve(user)
+            },
+            reject
+        )
+    })
+}
+
 const router = createRouter({
     history: createWebHistory(),
     routes,
@@ -29,14 +44,15 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
     if (to.matched.some((record) => record.meta.requiresAuth)) {
         //auth check
-        const token = localStorage.getItem("token")
-
-        if (token) {
-            return next()
+        if (await getCurrentUser()) {
+            next()
+        } else {
+            alert("You dont have permission")
+            return next("/login")
         }
-        return next("/login")
+    } else {
+        next()
     }
-    next()
 })
 
 export default router

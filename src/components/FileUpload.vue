@@ -3,7 +3,7 @@
         <form @submit.prevent="onSubmit" enctype="multipart/form-data">
             <div class="fields">
                 <label>Upload files</label><br />
-                <input type="file" ref="file" @change="onSelect" />
+                <input name="imageUpload" type="file" ref="file" @change="onSelect" />
             </div>
             <div class="fields">
                 <button>Submit</button>

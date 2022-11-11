@@ -26,6 +26,7 @@
                     <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: '' }">Contact</router-link></li>
                 </ul>
             </transition>
+            <file-upload></file-upload>
             <div class="ml-3 dropdown">
                 <v-avatar image="src/assets/avatar.jpg" size="45"></v-avatar>
                 <div class="dropdown-content">
@@ -39,7 +40,12 @@
 </template>
 
 <script>
+import FileUpload from "../components/FileUpload.vue"
+
 export default {
+    components: {
+        FileUpload,
+    },
     name: "nagivation-bar",
     data() {
         return {

@@ -14,7 +14,7 @@
         </form>
     </div>
 </template>
-<script>
+<script type="module">
 import axios from 'axios'
 export default {
     name: 'FileUpload',
@@ -26,8 +26,7 @@ export default {
     },
     methods: {
         onSelect() {
-            const file = this.$refs.file.files[0]
-            this.file = file
+            this.file = this.$refs.file.files[0]
         },
         async onSubmit() {
             console.log(this.file)
@@ -44,21 +43,6 @@ export default {
                 console.log(err)
                 this.message = 'Something went wrong :('
             }
-
-            // await axios.postForm(
-            //     '/upload',
-            //     { file: this.file },
-            //     {
-            //         baseURL: 'http://localhost:8080',
-            //     }
-            // )
-            // try {
-            //     await axios.postForm('/upload', { 'files[]': [this.file] })
-            //     this.message = 'Upload successfully'
-            // } catch (err) {
-            //     console.log(err)
-            //     this.message = 'Something went wrong :('
-            // }
         },
     },
 }

@@ -40,13 +40,8 @@
 </template>
 
 <script>
-import FileUpload from "../components/FileUpload.vue"
-
 export default {
-    components: {
-        FileUpload,
-    },
-    name: "nagivation-bar",
+    name: 'nagivation-bar',
     data() {
         return {
             scrollPosition: null,
@@ -57,11 +52,11 @@ export default {
         }
     },
     created() {
-        window.addEventListener("resize", this.checkScreen)
+        window.addEventListener('resize', this.checkScreen)
         this.checkScreen()
     },
     mounted() {
-        window.addEventListener("scroll", this.updateScroll)
+        window.addEventListener('scroll', this.updateScroll)
     },
     methods: {
         toggleMobileNav() {
@@ -89,11 +84,17 @@ export default {
 }
 </script>
 <script setup>
-import { useRouter } from "vue-router"
-import { onMounted, ref } from "vue"
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth"
+import { useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue'
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth'
+import FileUpload from '../components/FileUpload.vue'
 
 const isLoggedIn = ref(false)
+// const scrollPosition = ref(null)
+// const mobile = ref(null)
+// const mobileNav = ref(null)
+// const windowWidth = ref(null)
+// const isVisible = ref(true)
 
 let auth
 onMounted(() => {
@@ -111,7 +112,7 @@ const router = useRouter()
 
 const Logout = async () => {
     signOut(auth).then(() => {
-        router.push("/login")
+        router.push('/login')
     })
 }
 </script>

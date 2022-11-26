@@ -5,6 +5,8 @@ const bodyParser = require('body-parser')
 const dbi = require('./app/config/db.config')
 const multer = require('multer')
 const mysql = require('mysql2')
+const path = require('path')
+const { error } = require('console')
 
 dotenv.config()
 
@@ -14,6 +16,8 @@ const port = process.env.PORT || 8080
 const upload = multer({
     dest: './uploads',
 })
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 const db = mysql.createConnection({
     host: dbi.HOST,
@@ -37,6 +41,24 @@ app.post('/upload', upload.single('file'), (req, res) => {
     db.query(insertData, [imgsrc], (err, result) => {
         if (err) throw err
         console.log('file uploaded')
+    })
+})
+
+app.post('/createUser', (req, res) => {
+    db.query('INSERT INTO users(userId, userName) VALUES(?,?)', [req.body.uid, req.body.username], (err, result) => {
+        // if (err) throw err
+        console.log('User dublicated successfully')
+    })
+})
+
+app.get('/getAllImages', (req, res) => {
+    db.query('SELECT * FROM images', (err, results) => {
+        if (err) {
+            console.log(err)
+            res.json(results)
+        } else {
+            res.json(results)
+        }
     })
 })
 

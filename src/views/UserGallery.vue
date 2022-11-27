@@ -30,18 +30,6 @@ export default {
         this.getUserImages()
     },
     methods: {
-        // async getUserImages() {
-        //     const userId = this.$route.params.id
-        //     try {
-        //         const response = await axios.get('/getUserImagess', {
-        //             baseURL: 'http://localhost:8080',
-        //         })
-        //         this.images = response.data
-        //         console.log(this.images)
-        //     } catch (err) {
-        //         console.log(err)
-        //     }
-        // },
         userAuth() {
             const router = useRouter()
             this.userId = getAuth().currentUser.uid

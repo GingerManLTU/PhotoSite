@@ -1,29 +1,44 @@
 <script setup>
-import { ref } from "vue"
-import { useRouter } from "vue-router"
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth"
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth'
+import axios from 'axios'
 
 const router = useRouter()
 
-const email = ref("")
-const password = ref("")
-const c_password = ref("")
+const email = ref('')
+const password = ref('')
+const c_password = ref('')
+const username = ref('')
 
 const Register = async () => {
-    if (!email.value || !password.value || !c_password.value) {
-        return alert("Please fill in all fields")
+    if (!email.value || !password.value || !c_password.value || !username.value) {
+        return alert('Please fill in all fields')
     }
     if (password.value.length < 6) {
-        return alert("Password must be at least 6 characters")
+        return alert('Password must be at least 6 characters')
     }
     if (password.value !== c_password.value) {
-        return alert("Passwords do not match")
+        return alert('Passwords do not match')
     }
 
     createUserWithEmailAndPassword(getAuth(), email.value, password.value)
         .then((data) => {
-            console.log("Successfully created user: " + data)
-            router.push("/")
+            console.log('Successfully created user: ' + JSON.stringify(data))
+            try {
+                const auth = getAuth()
+                const user = auth.currentUser
+                console.log(user.uid)
+                const userData = { uid: user.uid, username: username.value }
+                console.log(userData)
+                axios.post('/createUser', userData, {
+                    baseURL: 'http://localhost:8080',
+                })
+            } catch (err) {
+                console.log(err)
+                this.message = 'User dublication failed :('
+            }
+            router.push('/home')
         })
         .catch((error) => {
             console.log(error.code)
@@ -41,6 +56,10 @@ const Register = async () => {
                 </div>
                 <div>
                     <form @submit.prevent="Register">
+                        <label>
+                            <span>Enter Your Username</span>
+                            <input style="margin: 20px" class="login-input" type="text" v-model="username" placeholder="PhotoGuruPRO" />
+                        </label>
                         <label>
                             <span>Enter Your Email</span>
                             <input style="margin: 20px" class="login-input" type="email" v-model="email" placeholder="email@email.com" />

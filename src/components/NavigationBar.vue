@@ -26,11 +26,12 @@
                     <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: '' }">Contact</router-link></li>
                 </ul>
             </transition>
+            <file-upload></file-upload>
             <div class="ml-3 dropdown">
                 <v-avatar image="src/assets/avatar.jpg" size="45"></v-avatar>
                 <div class="dropdown-content">
                     <a href="#">Profile</a>
-                    <a href="#">Gallery</a>
+                    <a @click="openGallery">Gallery</a>
                     <a @click="Logout">Logout</a>
                 </div>
             </div>
@@ -40,7 +41,7 @@
 
 <script>
 export default {
-    name: "nagivation-bar",
+    name: 'nagivation-bar',
     data() {
         return {
             scrollPosition: null,
@@ -51,11 +52,11 @@ export default {
         }
     },
     created() {
-        window.addEventListener("resize", this.checkScreen)
+        window.addEventListener('resize', this.checkScreen)
         this.checkScreen()
     },
     mounted() {
-        window.addEventListener("scroll", this.updateScroll)
+        window.addEventListener('scroll', this.updateScroll)
     },
     methods: {
         toggleMobileNav() {
@@ -83,17 +84,25 @@ export default {
 }
 </script>
 <script setup>
-import { useRouter } from "vue-router"
-import { onMounted, ref } from "vue"
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth"
+import { useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue'
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth'
+import FileUpload from '../components/FileUpload.vue'
 
 const isLoggedIn = ref(false)
+const userId = ref(null)
+// const scrollPosition = ref(null)
+// const mobile = ref(null)
+// const mobileNav = ref(null)
+// const windowWidth = ref(null)
+// const isVisible = ref(true)
 
 let auth
 onMounted(() => {
     auth = getAuth()
     onAuthStateChanged(auth, (user) => {
         if (user) {
+            userId.value = user.uid
             isLoggedIn.value = true
         } else {
             isLoggedIn.value = false
@@ -105,8 +114,12 @@ const router = useRouter()
 
 const Logout = async () => {
     signOut(auth).then(() => {
-        router.push("/login")
+        router.push('/')
     })
+}
+
+const openGallery = async () => {
+    router.push({ name: 'UserGallery', params: { id: userId.value } })
 }
 </script>
 

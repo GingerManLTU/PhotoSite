@@ -31,7 +31,7 @@
                 <v-avatar image="src/assets/avatar.jpg" size="45"></v-avatar>
                 <div class="dropdown-content">
                     <a href="#">Profile</a>
-                    <a href="#">Gallery</a>
+                    <a @click="openGallery">Gallery</a>
                     <a @click="Logout">Logout</a>
                 </div>
             </div>
@@ -90,6 +90,7 @@ import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth'
 import FileUpload from '../components/FileUpload.vue'
 
 const isLoggedIn = ref(false)
+const userId = ref(null)
 // const scrollPosition = ref(null)
 // const mobile = ref(null)
 // const mobileNav = ref(null)
@@ -101,6 +102,7 @@ onMounted(() => {
     auth = getAuth()
     onAuthStateChanged(auth, (user) => {
         if (user) {
+            userId.value = user.uid
             isLoggedIn.value = true
         } else {
             isLoggedIn.value = false
@@ -112,8 +114,12 @@ const router = useRouter()
 
 const Logout = async () => {
     signOut(auth).then(() => {
-        router.push('/login')
+        router.push('/')
     })
+}
+
+const openGallery = async () => {
+    router.push({ name: 'UserGallery', params: { id: userId.value } })
 }
 </script>
 

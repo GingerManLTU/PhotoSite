@@ -38,7 +38,7 @@ const Register = async () => {
                 console.log(err)
                 this.message = 'User dublication failed :('
             }
-            router.push('/')
+            router.push('/home')
         })
         .catch((error) => {
             console.log(error.code)

@@ -1,6 +1,4 @@
 <script setup>
-import { useRouter } from 'vue-router'
-import { StytchUIClient } from '@stytch/vanilla-js'
 import NavigationBar from '../components/NavigationBar.vue'
 </script>
 

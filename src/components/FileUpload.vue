@@ -16,6 +16,7 @@
 </template>
 <script type="module">
 import axios from 'axios'
+import { getAuth } from 'firebase/auth'
 export default {
     name: 'FileUpload',
     data() {
@@ -30,8 +31,10 @@ export default {
         },
         async onSubmit() {
             console.log(this.file)
+            const userId = getAuth().currentUser.uid
             const formData = new FormData()
             formData.append('file', this.file)
+            formData.append('userId', userId)
             try {
                 await axios.post('/upload', formData, {
                     baseURL: 'http://localhost:8080',

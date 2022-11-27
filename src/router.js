@@ -1,25 +1,34 @@
-import { createRouter, createWebHistory } from "vue-router"
-import { getAuth, onAuthStateChanged } from "firebase/auth"
+import { createRouter, createWebHistory } from 'vue-router'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
 
 const routes = [
     {
-        path: "/",
-        name: "Home",
-        component: () => import("./views/Home.vue"),
+        path: '/home',
+        name: 'Home',
+        component: () => import('./views/Home.vue'),
         //important allow just auth users
         meta: {
             requiresAuth: true,
         },
     },
     {
-        path: "/login",
-        name: "Login",
-        component: () => import("./views/Login.vue"),
+        path: '/',
+        name: 'Login',
+        component: () => import('./views/Login.vue'),
     },
     {
-        path: "/register",
-        name: "Register",
-        component: () => import("./views/Register.vue"),
+        path: '/register',
+        name: 'Register',
+        component: () => import('./views/Register.vue'),
+    },
+    {
+        path: '/gallery/:id',
+        name: 'UserGallery',
+        component: () => import('./views/UserGallery.vue'),
+        //important allow just auth users
+        meta: {
+            requiresAuth: true,
+        },
     },
 ]
 
@@ -47,8 +56,8 @@ router.beforeEach(async (to, from, next) => {
         if (await getCurrentUser()) {
             next()
         } else {
-            alert("You dont have permission")
-            return next("/login")
+            alert('You dont have permission')
+            return next('/')
         }
     } else {
         next()

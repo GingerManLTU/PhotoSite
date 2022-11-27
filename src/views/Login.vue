@@ -1,38 +1,38 @@
 <script setup>
-import { ref } from "vue"
-import { useRouter } from "vue-router"
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth"
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 
 const router = useRouter()
 
-const email = ref("")
-const password = ref("")
+const email = ref('')
+const password = ref('')
 const errMsg = ref()
 
 const Login = async () => {
     if (!email.value || !password.value) {
-        return alert("Please fill in all fields")
+        return alert('Please fill in all fields')
     }
 
     signInWithEmailAndPassword(getAuth(), email.value, password.value)
         .then((data) => {
-            console.log("Successfully logged in with email and password")
-            router.push("/")
+            console.log('Successfully logged in with email and password')
+            router.push('/home')
         })
         .catch((error) => {
             console.log(error.code)
             switch (error.code) {
-                case "auth/invalid-email":
-                    errMsg.value = "Invalid email"
+                case 'auth/invalid-email':
+                    errMsg.value = 'Invalid email'
                     break
-                case "auth/user-not-found":
+                case 'auth/user-not-found':
                     errMsg.value = "This email doesn't exist"
                     break
-                case "auth/wrong-password":
-                    errMsg.value = "Incorrect password"
+                case 'auth/wrong-password':
+                    errMsg.value = 'Incorrect password'
                     break
                 default:
-                    errMsg.value = "Email or password was incorrect"
+                    errMsg.value = 'Email or password was incorrect'
                     break
             }
         })
@@ -43,11 +43,11 @@ const signInWithGoogle = () => {
     signInWithPopup(getAuth(), provider)
         .then((result) => {
             console.log(result.user)
-            router.push("/")
+            router.push('/home')
         })
         .catch((error) => {
             console.log(error)
-            alert(error.body + ": " + error.message)
+            alert(error.body + ': ' + error.message)
         })
 }
 </script>

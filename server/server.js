@@ -37,8 +37,8 @@ app.use(express.json())
 
 app.post('/upload', upload.single('file'), (req, res) => {
     var imgsrc = 'http://localhost:8080/uploads/' + req.file.filename
-    var insertData = 'INSERT INTO images(file_src)VALUES(?)'
-    db.query(insertData, [imgsrc], (err, result) => {
+    var insertData = 'INSERT INTO images(file_src, userId) VALUES(?,?)'
+    db.query(insertData, [imgsrc, req.body.userId], (err, result) => {
         if (err) throw err
         console.log('file uploaded')
     })
@@ -55,11 +55,24 @@ app.get('/getAllImages', (req, res) => {
     db.query('SELECT * FROM images', (err, results) => {
         if (err) {
             console.log(err)
-            res.json(results)
+            res.json(err)
         } else {
             res.json(results)
         }
     })
+})
+
+app.get('/getUserImages', (req, res) => {
+    const userId = req.query.id
+    db.query('SELECT * FROM images WHERE userId = ?', [userId], (err, results) => {
+        if (err) {
+            console.log(err)
+            res.json(err)
+        } else {
+            res.json(results)
+        }
+    })
+    console.log(req.query.id)
 })
 
 app.listen(port, () => console.log(`Server started on port ${port}`))

@@ -76,7 +76,7 @@ const Register = async () => {
                 </div>
                 <button class="submit-button" @click="Register">Sign Up</button>
                 <div>
-                    <p>Have an account? <router-link to="/Login">Login</router-link></p>
+                    <p>Have an account? <router-link to="/">Login</router-link></p>
                 </div>
             </div>
         </div>

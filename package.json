@@ -24,6 +24,7 @@
         "roboto-fontface": "*",
         "sass": "^1.55.0",
         "sequelize": "^6.25.5",
+        "uuidv4": "^6.2.13",
         "vue": "^3.2.37",
         "vue-router": "4",
         "vuetify": "^3.0.0"

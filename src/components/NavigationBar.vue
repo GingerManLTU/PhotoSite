@@ -9,25 +9,19 @@
             </div>
             <ul v-show="!mobile" class="navigation-titles">
                 <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: 'Home' }">Home</router-link></li>
-                <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: '' }">About</router-link></li>
+                <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: 'Forums' }">Forums</router-link></li>
                 <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: '' }">Profile</router-link></li>
-                <li class="nagivation-li">
-                    <div class="wrapper-div" @mouseover="onOver" @mouseleave="onLeave">
-                        <router-link class="navigation-link" :to="{ name: '' }">Contact</router-link>
-                    </div>
-                </li>
             </ul>
 
             <transition name="mobile-nav">
                 <ul v-show="mobileNav" class="navigation-dropdown">
                     <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: 'Home' }">Home</router-link></li>
-                    <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: '' }">About</router-link></li>
+                    <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: 'Forums' }">Forums</router-link></li>
                     <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: '' }">Profile</router-link></li>
-                    <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: '' }">Contact</router-link></li>
                 </ul>
             </transition>
-            <file-upload></file-upload>
-            <div class="ml-3 dropdown">
+            <file-upload class="navigation-mobile__upload"></file-upload>
+            <div class="navigation-mobile dropdown">
                 <v-avatar image="src/assets/avatar.jpg" size="45"></v-avatar>
                 <div class="dropdown-content">
                     <a href="#">Profile</a>

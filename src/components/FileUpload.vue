@@ -1,17 +1,11 @@
 <template>
-    <div class="file">
-        <form @submit.prevent="onSubmit" enctype="multipart/form-data">
-            <div class="fields">
-                <label>Upload files</label><br />
-                <input name="imageUpload" type="file" ref="file" @change="onSelect" />
-            </div>
-            <div class="fields">
-                <button>Submit</button>
-            </div>
-            <div class="message">
-                <h5>{{ message }}</h5>
-            </div>
-        </form>
+    <!-- <label>Upload files</label><br />
+                <input name="imageUpload" type="file" ref="file" @change="onSelect" /> -->
+    <!-- <input type="file" id="upload" hidden />
+                <label for="upload">Choose file</label> -->
+    <div>
+        <v-btn class="upload-button" :loading="isSelecting" @click="handleFileImport"> Upload File </v-btn>
+        <input ref="uploader" class="d-none" type="file" @change="onFileChanged" />
     </div>
 </template>
 <script type="module">
@@ -23,17 +17,31 @@ export default {
         return {
             file: '',
             message: '',
+            isSelecting: false,
+            selectedFile: null,
         }
     },
     methods: {
-        onSelect() {
-            this.file = this.$refs.file.files[0]
+        handleFileImport() {
+            this.isSelecting = true
+            window.addEventListener(
+                'focus',
+                () => {
+                    this.isSelecting = false
+                },
+                { once: true }
+            )
+            this.$refs.uploader.click()
         },
-        async onSubmit() {
-            console.log(this.file)
+        onFileChanged(e) {
+            this.selectedFile = e.target.files[0]
+            this.uploadImage(this.selectedFile)
+        },
+        async uploadImage(image) {
+            console.log(image)
             const userId = getAuth().currentUser.uid
             const formData = new FormData()
-            formData.append('file', this.file)
+            formData.append('file', image)
             formData.append('userId', userId)
             try {
                 await axios.post('/upload', formData, {

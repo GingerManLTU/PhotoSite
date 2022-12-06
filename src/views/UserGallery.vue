@@ -6,9 +6,23 @@ import NavigationBar from '../components/NavigationBar.vue'
     <div class="wrapper-home"></div>
     <div class="wrapper-home__block">
         <NavigationBar></NavigationBar>
-        <h1>Home Page</h1>
-        <div class="image" v-for="image in images" :key="image.id">
-            <img class="image" :src="image.file_src" />
+        <div class="nav-wrapper">
+            <div class="gallery-page">
+                <div class="gallery-page__title">
+                    <h1>Your gallery</h1>
+                </div>
+                <div class="gallery-page__grid">
+                    <div class="gallery-page__image-card" v-for="image in images" :key="image.id">
+                        <div class="gallery-page__image-card-photo-wrapper">
+                            <img class="gallery-page__image-card-photo" :src="image.file_src" />
+                        </div>
+                        <button @click="deleteImage(image.imageId)" class="button-main">
+                            <v-icon icon="mdi-delete" size="small" @click="" />
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -48,9 +62,20 @@ export default {
                         id: this.routerId,
                     },
                 })
-                console.log(response)
                 this.images = response.data
-                console.log(this.images)
+            } catch (err) {
+                console.log(err)
+            }
+        },
+        async deleteImage(id) {
+            try {
+                await axios.delete('/deleteImage', {
+                    baseURL: 'http://localhost:8080',
+                    params: {
+                        id: id,
+                    },
+                })
+                this.getUserImages()
             } catch (err) {
                 console.log(err)
             }

@@ -31,6 +31,7 @@ import NavigationBar from '../components/NavigationBar.vue'
 import axios from 'axios'
 import { getAuth } from 'firebase/auth'
 import { useRouter } from 'vue-router'
+import Swal from 'sweetalert2'
 export default {
     data() {
         return {
@@ -68,17 +69,30 @@ export default {
             }
         },
         async deleteImage(id) {
-            try {
-                await axios.delete('/deleteImage', {
-                    baseURL: 'http://localhost:8080',
-                    params: {
-                        id: id,
-                    },
-                })
-                this.getUserImages()
-            } catch (err) {
-                console.log(err)
-            }
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'Your photo will be deleted!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!',
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        await axios.delete('/deleteImage', {
+                            baseURL: 'http://localhost:8080',
+                            params: {
+                                id: id,
+                            },
+                        })
+                        this.getUserImages()
+                    } catch (err) {
+                        console.log(err)
+                    }
+                    Swal.fire('Deleted!', 'Your photo has been deleted.', 'success')
+                }
+            })
         },
     },
 }

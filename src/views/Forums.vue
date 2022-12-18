@@ -53,6 +53,7 @@ const openSelectedTopic = (id) => {
 <script>
 import axios from 'axios'
 import { getAuth } from 'firebase/auth'
+import Swal from 'sweetalert2'
 
 export default {
     data() {
@@ -105,18 +106,31 @@ export default {
                 console.log(err)
             }
         },
-        async deleteTopic(id) {
-            try {
-                await axios.delete('/deleteTopic', {
-                    baseURL: 'http://localhost:8080',
-                    params: {
-                        id: id,
-                    },
-                })
-                this.getForumTopics()
-            } catch (err) {
-                console.log(err)
-            }
+        deleteTopic(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'Your topic will be deleted!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!',
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        await axios.delete('/deleteTopic', {
+                            baseURL: 'http://localhost:8080',
+                            params: {
+                                id: id,
+                            },
+                        })
+                        this.getForumTopics()
+                    } catch (err) {
+                        console.log(err)
+                    }
+                    Swal.fire('Deleted!', 'Your topic has been deleted.', 'success')
+                }
+            })
         },
         convertData(data) {
             const convertedData = new Date(data)

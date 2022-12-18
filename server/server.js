@@ -95,7 +95,6 @@ app.get('/getUserImages', (req, res) => {
 })
 
 app.delete('/deleteImage', (req, res) => {
-    console.log(req.query.imageId)
     db.query('DELETE FROM images WHERE images.imageId = ?', [req.query.id], (err, result) => {
         if (err) {
             throw err
@@ -108,9 +107,6 @@ app.delete('/deleteImage', (req, res) => {
 
 app.post('/likeImage', (req, res) => {
     let isSelected
-    var d = new Date()
-    d.toISOString().split('T')[0] + ' ' + d.toTimeString().split(' ')[0].replace('T', ' ')
-    console.log(d)
     db.query('SELECT COUNT(likeId) AS isSelected FROM likes WHERE userId = ? and imageId = ?', [req.body.userId, req.body.imageId], (err, result) => {
         if (err) {
             throw err
@@ -136,6 +132,63 @@ app.post('/likeImage', (req, res) => {
                     }
                 })
             }
+        }
+    })
+})
+
+app.post('/createForumTopic', (req, res) => {
+    db.query('INSERT INTO forum(forumId, userId, forumTitle, forumDescription) VALUES(?,?,?,?)', [uuidv4(), req.body.userId, req.body.title, req.body.description], (err, result) => {
+        if (err) throw err
+        console.log('Forum created successfully')
+    })
+})
+
+app.get('/getAllForumTopics', (req, res) => {
+    db.query(
+        'SELECT forumId, forumTitle, forumDescription, forum.userId, unix_timestamp(createdAt) * 1000 as createdAt, users.userName FROM forum LEFT JOIN users ON forum.userId = users.userId',
+        (err, results) => {
+            if (err) {
+                console.log(err)
+                res.json(err)
+            } else {
+                res.json(results)
+            }
+        }
+    )
+})
+
+app.post('/addForumComment', (req, res) => {
+    db.query('INSERT INTO forumComments(commentId, forumId, userId, forumComment) VALUES(?,?,?,?)', [uuidv4(), req.body.forumId, req.body.userId, req.body.forumComment], (err, result) => {
+        if (err) {
+            throw err
+        } else {
+            res.send('Comment added successfully.')
+            console.log('Image deleted successfully')
+        }
+    })
+})
+
+app.get('/getAllForumComments', (req, res) => {
+    db.query(
+        'SELECT commentId, forumComments.forumId, forumComments.userId, forumComment, unix_timestamp(forumComments.createdAt) * 1000 as createdAt, forum.forumTitle, forum.forumDescription, users.userName FROM forumComments LEFT JOIN forum ON forum.forumId = forumComments.forumId LEFT JOIN users ON forumComments.userId = users.userId ORDER BY forumComments.createdAt DESC',
+        (err, results) => {
+            if (err) {
+                console.log(err)
+                res.json(err)
+            } else {
+                res.json(results)
+            }
+        }
+    )
+})
+
+app.delete('/deleteTopic', (req, res) => {
+    db.query('DELETE FROM forum WHERE forumId = ?', [req.query.id], (err, result) => {
+        if (err) {
+            throw err
+        } else {
+            res.send('Topic deleted succ.')
+            console.log('Topic deleted successfully')
         }
     })
 })

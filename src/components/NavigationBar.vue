@@ -85,11 +85,6 @@ import FileUpload from '../components/FileUpload.vue'
 
 const isLoggedIn = ref(false)
 const userId = ref(null)
-// const scrollPosition = ref(null)
-// const mobile = ref(null)
-// const mobileNav = ref(null)
-// const windowWidth = ref(null)
-// const isVisible = ref(true)
 
 let auth
 onMounted(() => {
@@ -112,7 +107,7 @@ const Logout = async () => {
     })
 }
 
-const openGallery = async () => {
+const openGallery = () => {
     router.push({ name: 'UserGallery', params: { id: userId.value } })
 }
 </script>

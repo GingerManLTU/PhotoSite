@@ -30,6 +30,23 @@ const routes = [
             requiresAuth: true,
         },
     },
+    {
+        path: '/forums',
+        name: 'Forums',
+        component: () => import('./views/Forums.vue'),
+        //important allow just auth users
+        meta: {
+            requiresAuth: true,
+        },
+    },
+    {
+        path: '/forum/:id',
+        name: 'Selected',
+        component: () => import('./views/SelectedForum.vue'),
+        meta: {
+            requiresAuth: true,
+        },
+    },
 ]
 
 const getCurrentUser = () => {

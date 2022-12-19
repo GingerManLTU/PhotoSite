@@ -1,8 +1,4 @@
 <template>
-    <!-- <label>Upload files</label><br />
-                <input name="imageUpload" type="file" ref="file" @change="onSelect" /> -->
-    <!-- <input type="file" id="upload" hidden />
-                <label for="upload">Choose file</label> -->
     <div>
         <v-btn class="upload-button" :loading="isSelecting" @click="handleFileImport"> Upload File </v-btn>
         <input ref="uploader" class="d-none" type="file" @change="onFileChanged" />

@@ -119,6 +119,17 @@ input
   button 
     background-color: #f9f9f9
 
+.cursor
+  &-none
+    cursor: not-allowed
+  &-pointer
+    cursor: pointer
+  
+.text-color
+  &-black
+    color: #000
+
+
 .button-main
   display: inline-block 
   outline: none 
@@ -492,5 +503,127 @@ input
         border-radius: 24px   
         margin: 0 auto    
 
+.random-th
+  width: 160px
+  &__button
+    width: 30px
+    vertical-align: middle
+    text-align: center
+
+.forum-container
+  display: relative
+  width: 95%
+  background-color: #fff
+  min-height: 80px
+  margin: 12px auto
+  border-radius: 24px
+  padding: 24px
+  &__add
+    position: relative
+    width: 100%
+    border: 1px solid #ccc
+    margin: 0 auto
+    min-height: 48px
+    border-radius: 12px
+    padding: 0 12px
+    &-input
+      margin: 10px 10px 10px 0
+      padding: 20px
+      background-color: #fff
+      border: 1px solid white
+      border-radius: 12px
+      height: 30px
+      transition: all .2s ease-in-out
+      color: black
+      font-size: 18px
+      width: calc(90% - 80px)
+      @media (max-width: 752px)
+        min-width: 70px
+        width: 100%
+      &:hover, &:focus-visible
+        outline: none
+        box-shadow: none
+    &-button
+      color: black
+      border: 2px solid rgba(87, 195, 206, 0.8)
+      padding: 6px 14px
+      height: 48px
+      font-weight: 700
+      border-radius: 12px
+      margin: 0 auto 12px
+      @media (max-width: 750px)
+        display: block
+        &:hover, &:focus-visible
+          outline: none
+          box-shadow: none
+  &__title
+    margin: 12px
+    font-size: 48px
+  &__description
+    margin: 24px 12px 24px 18px
+    font-size: 24px
+  &__no-comments
+    color: #000
+    width: 50%
+    margin: 48px auto 24px
+    font-size: 24px
+    text-align: center
+    font-weight: 600
+
+.forum-container__comments
+  position: relative
+  justify-content: center
+  width: 100%
+  min-width: 240px
+  &-wrapper
+    display: grid
+    grid-template-columns: 140px auto 40px
+    gap: 20px
+    margin: 12px auto
+    padding: 12px 10px
+    background-color: #fff
+    border: 2px solid rgba(87, 195, 206, 0.3)
+    width: 100%
+    min-height: 80px
+    border-radius: 12px
+    word-wrap: break-word
+    @media (max-width: 1100px)
+      grid-template-columns: repeat(1, auto)
+      .forum-container__comments-buttons
+        margin: 0 auto
+        flex-direction: row
+        .forum-container__comments-buttons-space
+          margin: 0 12px
+      .forum-container__comments-comment
+        margin: auto auto
+        // commented for testing purposes
+      // .forum-container__comments-user
+      //   margin: auto auto
+      .forum-container__comments-love
+        margin: auto 0
+
+  &-user
+    color: black
+  &-comment
+    color: black
+    margin: auto 12px
+    word-wrap: break-word
+  &-buttons
+    color: black
+    margin: 0 auto
+    display: flex
+    flex-direction: column
+    &-space
+      margin: 12px 0
+  &-love
+    margin: 2px auto -6px
+    font-weight: 600
+    color: black
+
+.ps-pagination
+  color: black
+
+.primary-color
+  color: rgba(87, 195, 206, 1)
 
 

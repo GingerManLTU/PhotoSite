@@ -76,6 +76,7 @@ app.get('/getAllImages', (req, res) => {
                 newData[i] = { ...data, ...results[i] }
                 i++
             }
+            console.log(newData)
             res.json(newData)
         }
     })
@@ -170,7 +171,17 @@ app.post('/addForumComment', (req, res) => {
 
 app.get('/getAllForumComments', (req, res) => {
     db.query(
-        'SELECT commentId, forumComments.forumId, forumComments.userId, forumComment, unix_timestamp(forumComments.createdAt) * 1000 as createdAt, forum.forumTitle, forum.forumDescription, users.userName FROM forumComments LEFT JOIN forum ON forum.forumId = forumComments.forumId LEFT JOIN users ON forumComments.userId = users.userId ORDER BY forumComments.createdAt DESC',
+        `SELECT forumComments.commentId, forumComments.forumId, forumComments.userId, forumComment, unix_timestamp(forumComments.createdAt) * 1000 as createdAt, forum.forumTitle, forum.forumDescription, users.userName, COUNT(reportedComments.reportId) as reportCount, 
+        (SELECT COUNT(loveId) FROM lovedComments WHERE forumComments.commentId = lovedComments.commentId) AS loveCount,
+        (SELECT COUNT(loveId) FROM lovedComments WHERE userId = ? and commentId = forumComments.commentId) AS isLoved
+        FROM forumComments 
+        LEFT JOIN forum ON forum.forumId = forumComments.forumId 
+        LEFT JOIN users ON forumComments.userId = users.userId 
+        LEFT JOIN reportedComments ON forumComments.commentId = reportedComments.commentId AND reportedComments.userId = ?
+        WHERE forumComments.forumId = ? 
+        GROUP BY forumComments.commentId
+        ORDER BY forumComments.createdAt DESC`,
+        [req.query.userId, req.query.userId, req.query.forumId],
         (err, results) => {
             if (err) {
                 console.log(err)
@@ -182,6 +193,17 @@ app.get('/getAllForumComments', (req, res) => {
     )
 })
 
+app.get('/getForumTitle', (req, res) => {
+    db.query(`SELECT forumTitle, forumDescription FROM forum WHERE forumId = ?`, [req.query.forumId], (err, results) => {
+        if (err) {
+            console.log(err)
+            res.json(err)
+        } else {
+            res.json(results)
+        }
+    })
+})
+
 app.delete('/deleteTopic', (req, res) => {
     db.query('DELETE FROM forum WHERE forumId = ?', [req.query.id], (err, result) => {
         if (err) {
@@ -189,6 +211,81 @@ app.delete('/deleteTopic', (req, res) => {
         } else {
             res.send('Topic deleted succ.')
             console.log('Topic deleted successfully')
+        }
+    })
+})
+
+app.post('/loveComment', (req, res) => {
+    db.query('SELECT COUNT(loveId) AS isLoved FROM lovedComments WHERE userId = ? and commentId = ? ', [req.body.userId, req.body.commentId], (err, result) => {
+        if (err) {
+            throw err
+        } else {
+            console.log(result)
+            if (result[0].isLoved) {
+                db.query('DELETE FROM lovedComments WHERE userId = ? and commentId = ?', [req.body.userId, req.body.commentId], (err, result) => {
+                    if (err) {
+                        throw err
+                    } else {
+                        res.send('Comment unloved')
+                        console.log('Comment unloved')
+                    }
+                })
+            } else {
+                db.query('INSERT INTO lovedComments(loveId, userId, commentId) VALUES(?,?,?)', [uuidv4(), req.body.userId, req.body.commentId], (err, result) => {
+                    if (err) {
+                        throw err
+                    } else {
+                        res.send('Comment liked successfully.')
+                        console.log('User loved comment successfully!')
+                    }
+                })
+            }
+        }
+    })
+})
+
+app.post('/reportComment', (req, res) => {
+    db.query(
+        'SELECT (SELECT COUNT(reportId) FROM reportedComments WHERE userId = ? and commentId = ?) AS isReported, (SELECT COUNT(reportId) FROM reportedComments WHERE commentId = ?) AS reportCount',
+        [req.body.userId, req.body.commentId, req.body.commentId],
+        (err, result) => {
+            if (err) {
+                throw err
+            } else {
+                console.log(result)
+                if (result[0].reportCount === 4 && !result[0].isReported) {
+                    db.query('DELETE FROM forumComments WHERE commentId = ?', [req.body.commentId], (err, result) => {
+                        if (err) {
+                            throw err
+                        } else {
+                            res.send('Comment deleted because reached report limit')
+                            console.log('Comment deleted because reached report limit')
+                        }
+                    })
+                } else if (!result[0].isReported) {
+                    db.query('INSERT INTO reportedComments(reportId, userId, commentId) VALUES(?,?,?)', [uuidv4(), req.body.userId, req.body.commentId], (err, result) => {
+                        if (err) {
+                            throw err
+                        } else {
+                            res.send('Comment reported successfully.')
+                            console.log('User reported comment successfully!')
+                        }
+                    })
+                } else {
+                    return
+                }
+            }
+        }
+    )
+})
+
+app.delete('/deleteComment', (req, res) => {
+    db.query('DELETE FROM forumComments WHERE forumId = ? and commentId = ?', [req.query.forumId, req.query.commentId], (err, result) => {
+        if (err) {
+            throw err
+        } else {
+            res.send('Comment deleted succ.')
+            console.log('Comment deleted successfully')
         }
     })
 })

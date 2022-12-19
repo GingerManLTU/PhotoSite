@@ -9,12 +9,12 @@
                 <v-card-text>
                     <label>
                         <span>Enter title</span>
-                        <input type="text" v-model="title" placeholder="Tips for..." required />
+                        <input style="margin: 24px" type="text" v-model="title" placeholder="Tips for..." required />
                     </label>
                     <v-spacer />
                     <label>
-                        <span>Describe it! (Max 200 char)</span>
-                        <v-textarea maxlength="200" v-model="description" placeholder="Describe your topic for everyone!" required />
+                        <span>Describe it! (Max 500 char)</span>
+                        <v-textarea style="margin-top: 12px" maxlength="500" v-model="description" placeholder="Describe your topic for everyone!" required />
                     </label>
                 </v-card-text>
                 <v-card-actions>

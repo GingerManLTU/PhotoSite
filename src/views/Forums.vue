@@ -35,11 +35,11 @@ const openSelectedTopic = (id) => {
                         </thead>
                         <tbody>
                             <tr v-for="topic in forumTopics" :key="topic.forumId">
-                                <td @click="openSelectedTopic(topic.forumId)">
+                                <td @click="openSelectedTopic(topic.forumId)" style="cursor: pointer">
                                     {{ topic.forumTitle }}
                                 </td>
-                                <td @click="openSelectedTopic(topic.forumId)">{{ topic.userName }}</td>
-                                <td @click="openSelectedTopic(topic.forumId)">{{ convertData(topic.createdAt) }}</td>
+                                <td @click="openSelectedTopic(topic.forumId)" style="cursor: pointer">{{ topic.userName }}</td>
+                                <td @click="openSelectedTopic(topic.forumId)" style="cursor: pointer">{{ convertData(topic.createdAt) }}</td>
                                 <td class="random-th__button"><v-icon v-if="currentUserId === topic.userId" icon="mdi-delete" size="large" @click="deleteTopic(topic.forumId)" /></td>
                             </tr>
                         </tbody>

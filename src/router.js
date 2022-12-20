@@ -47,6 +47,15 @@ const routes = [
             requiresAuth: true,
         },
     },
+    {
+        path: '/profile',
+        name: 'Profile',
+        component: () => import('./views/Profile.vue'),
+        //important allow just auth users
+        meta: {
+            requiresAuth: true,
+        },
+    },
 ]
 
 const getCurrentUser = () => {

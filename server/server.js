@@ -290,4 +290,37 @@ app.delete('/deleteComment', (req, res) => {
     })
 })
 
+app.get('/getUsername', (req, res) => {
+    db.query(`SELECT userName FROM users WHERE userId = ?`, [req.query.userId], (err, results) => {
+        if (err) {
+            console.log(err)
+            res.json(err)
+        } else {
+            res.json(results)
+        }
+    })
+})
+
+app.post('/updateUsername', (req, res) => {
+    db.query('UPDATE users SET userName = ? WHERE userId = ?', [req.body.userName, req.body.userId], (err, result) => {
+        if (err) {
+            throw err
+        } else {
+            res.send('Username updated successfully.')
+            console.log('Username updated successfully')
+        }
+    })
+})
+
+app.delete('/deleteUser', (req, res) => {
+    db.query('DELETE FROM users WHERE userId = ?', [req.query.userId], (err, result) => {
+        if (err) {
+            throw err
+        } else {
+            res.send('User deleted succ.')
+            console.log('User deleted successfully')
+        }
+    })
+})
+
 app.listen(port, () => console.log(`Server started on port ${port}`))

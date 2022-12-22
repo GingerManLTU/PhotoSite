@@ -1,7 +1,7 @@
 <template>
     <div>
         <v-btn class="upload-button" :loading="isSelecting" @click="handleFileImport"> Upload File </v-btn>
-        <input ref="uploader" class="d-none" type="file" @change="onFileChanged" />
+        <input ref="uploader" class="d-none" type="file" name="image" accept="image/jpeg" @change="onFileChanged" />
     </div>
 </template>
 <script type="module">

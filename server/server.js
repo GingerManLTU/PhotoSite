@@ -8,16 +8,21 @@ const mysql = require('mysql2')
 const path = require('path')
 const { v4: uuidv4 } = require('uuid')
 const fs = require('fs')
-const ssim = require('ssim.js')
+// const ssim = require('ssim.js')
 
-const { compare } = require('ssim')
-const looksSame = require('looks-same')
-const imageDiff = require('image-diff')
-const pixelmatch = require('pixelmatch')
+// const { compare } = require('ssim')
+// const looksSame = require('looks-same')
+// const imageDiff = require('image-diff')
+// const pixelmatch = require('pixelmatch')
 const Jimp = require('jimp')
-const { exec } = require('child_process')
-const imageHash = require('image-hash')
-const resemble = require('resemblejs')
+// const { imageHash } = require('image-hash')
+// const resemble = require('resemblejs')
+// const { loadImage } = require('canvas')
+// const BlinkDiff = require('blink-diff')
+// const sharp = require('sharp')
+// const jsfeat = require('jsfeat')
+// const imageSimilarity = require('image-similarity')
+// const { diff } = require('jimp/types')
 
 dotenv.config()
 
@@ -33,8 +38,23 @@ const storage = multer.diskStorage({
     },
 })
 
+const fileFilter = (req, file, cb) => {
+    if (!file) {
+        cb(new Error('No file was selected'), false)
+    } else {
+        // Allow only image files that are not GIFs
+        if (!file.mimetype.startsWith('image/') || file.mimetype === 'image/gif') {
+            req.fileValidationError = 'Forbidden file format'
+            return cb(null, false, req.fileValidationError)
+        } else if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/jpg' || file.mimetype === 'image/png') {
+            cb(null, true)
+        }
+    }
+}
+
 const upload = multer({
     storage: storage,
+    fileFilter: fileFilter,
     // dest: './uploads',
     // storage: multer.memoryStorage(),
 })
@@ -58,13 +78,15 @@ app.use(cors())
 app.use(express.json())
 
 app.post('/upload', upload.single('file'), async (req, res) => {
+    if (req.fileValidationError) {
+        return res.status(400).send({ error: 'Only image files are allowed' })
+    }
     const imageExtensions = ['jpg', 'jpeg', 'png']
     fs.readdir('./uploads', async (err, files) => {
         if (err) {
             console.error(err)
             return
         }
-
         //TODO make sure that only images are uploaded
 
         const imagePaths = files
@@ -74,153 +96,39 @@ app.post('/upload', upload.single('file'), async (req, res) => {
             })
             .map((file) => path.join('uploads', file))
 
+        const selectedImage = await Jimp.read(req.file.path)
+
         for (const prevImage of imagePaths) {
-            // const test = await Jimp.read(req.file.path)
-            // const test1 = await Jimp.read(prevImage)
-            // const { equal } = await looksSame(req.file.path, prevImage, { tolerance: 5 })
-            // console.log(equal)
-
-            resemble(req.file.path)
-                .compareTo(prevImage)
-                .onComplete(function (data) {
-                    // The data object contains information about the difference between the images
-                    console.log(data.rawMisMatchPercentage) // Outputs a numerical value representing the similarity
-                })
-
-            // const image1Buffer = await test.getBufferAsync(Jimp.MIME_PNG)
-            // const image2Buffer = await test1.getBufferAsync(Jimp.MIME_PNG)
-            // const ssimValue = ssim.ssim(test, test1)
-            // console.log(ssimValue)
-
             console.log(req.file.path, prevImage)
-            // const a = Jimp.diff(test1, test).percent
-            // console.log(a)
-        }
-    })
-    {
-        // looksSame(req.file.path, prevImage, { strict: true }, (error, result) => {
-        //     console.log('aa')
-        //     if (error) {
-        //         // handle error
-        //     } else {
-        //         if (result.equal) {
-        //             // The images are similar
-        //             return res.status(400).send('The uploaded image is too similar to a previously uploaded image')
-        //         }
-        //     }
-        //     console.log(result)
-        //     return res.status(200).send('The uploaded image is too ')
-        // })
-        //getting uploaded images
-        // const [rows] = await db.promise().query('SELECT file_src FROM images')
-        // const previouslyUploadedImagePaths = rows.map((row) => row.file_src)
-        // const previouslyUploadedImageFilePaths = previouslyUploadedImagePaths.map((path) => path.replace('http://localhost:8080/', ''))
-        // const previouslyUploadedImages = await Promise.all(
-        //     previouslyUploadedImageFilePaths.map(async (path) => {
-        //         return new Promise((resolve, reject) => {
-        //             fs.readFile(path, (error, data) => {
-        //                 if (error) {
-        //                     reject(error)
-        //                 } else {
-        //                     resolve(data)
-        //                 }
-        //             })
-        //         })
-        //     })
-        // )
-        // console.log('aaaa')
-        // console.log(previouslyUploadedImages)
-        // console.log(req.file.filename)
-        // const uploadedImage = await fs.promises.readFile(req.file.path)
-        // const image1 = await Jimp.read(uploadedImage)}
-        //     const image2 = await Jimp.read(prevImage)
-        // Check if the images have the same size. If not, resize one of the images.
-        // let width, height
-        // if (image1.bitmap.width === image2.bitmap.width && image1.bitmap.height === image2.bitmap.height) {
-        //     width = image1.bitmap.width
-        //     height = image1.bitmap.height
-        // } else {
-        //     // Resize the smaller image to the size of the larger image
-        //     if (image1.bitmap.width > image2.bitmap.width || image1.bitmap.height > image2.bitmap.height) {
-        //         image2.resize(image1.bitmap.width, image1.bitmap.height)
-        //         width = image1.bitmap.width
-        //         height = image1.bitmap.height
-        //     } else {
-        //         image1.resize(image2.bitmap.width, image2.bitmap.height)
-        //         width = image2.bitmap.width
-        //         height = image2.bitmap.height
-        //     }
-        // }
-        // Compare the images using the pixelmatch function
-        // const differenceMap = new Uint8Array(width * height)
-        // const numDiffPixels = pixelmatch(image1.bitmap.data, image2.bitmap.data, differenceMap, width, height, { threshold: 0.1 })
-        // const similarity = (width * height - numDiffPixels) / (width * height)
-        // Check if the images are similar enough
-        // if (similarity >= 0.95) {
-        //     return res.status(400).send('The uploaded image is too similar to a previously uploaded image')
-        // }
-        // const uploadedImage = await fs.promises.readFile(req.file.path)
-        // const image1 = await Jimp.read(uploadedImage)
-        // console.log('aaa')
-        // console.log('aaaa')
-        // for (const prevImage of previouslyUploadedImages) {
-        //     const image2 = await Jimp.read(prevImage)
-        //     const pixels1 = await image1.getBufferAsync(Jimp.MIME_PNG)
-        //     const pixels2 = await image2.getBufferAsync(Jimp.MIME_PNG)
-        //     const width = Math.max(image1.bitmap.width, image2.bitmap.width)
-        //     const height = Math.max(image1.bitmap.height, image2.bitmap.height)
-        //     const differenceMap = new Uint8Array(width * height)
-        //     console.log(image1.bitmap.data)
-        //     const numDiffPixels = pixelmatch(pixels1, pixels2, differenceMap, width, height, { threshold: 0.1 })
-        //     const similarity = (width * height - numDiffPixels) / (width * height)
-        //     console.log(similarity)
-        //     // Check if the images are similar enough
-        //     if (similarity >= 0.95) {
-        //         return res.status(400).send('The uploaded image is too similar to a previously uploaded image')
-        //     }
-        //     perceptualDiff.compare(
-        //         {
-        //             fileABuffer: uploadedImage,
-        //             fileBBuffer: prevImage,
-        //             outputPath: '/uploads.jpeg',
-        //         },
-        //         function (err, result) {
-        //             if (err) {
-        //                 console.error(err)
-        //             } else {
-        //                 // result.imagesAreSame will be true if the images are considered similar
-        //                 console.log(result.imagesAreSame)
-        //             }
-        //         }
-        //     )
-        // console.log('aaaaa')
-        // imageDiff(
-        //     {
-        //         actualImage: prevImage,
-        //         expectedImage: uploadedImage,
-        //         diffImage: 'diff.png',
-        //     },
-        //     function (err, imagesAreSame) {
-        //         console.log(imagesAreSame + 'a')
-        //     }
-        // )
-        // console.log(uploadedImage, prevImage + ' aaaa ')
-        // const ssimValue = ssim(uploadedImage, prevImage)
-        // if (ssimValue >= 0.95) {
-        //     // The images are similar
-        //     console.log(ssimValue)
-        //     return res.status(400).send('The uploaded image is too similar to a previously uploaded image')
-        // }
-        // }
-        // console.log(ssimValue)
-    }
 
-    var imgsrc = 'http://localhost:8080/uploads/' + req.file.filename
-    var insertData = 'INSERT INTO images(imageId, file_src, userId) VALUES(?,?,?)'
-    db.query(insertData, [uuidv4(), imgsrc, req.body.userId], (err, result) => {
-        if (err) throw err
-        console.log('file uploaded')
-        res.send('Image uploaded succ.')
+            const existingImage = await Jimp.read(prevImage)
+            const distance = Jimp.distance(selectedImage, existingImage)
+            console.log(distance)
+            if (distance < 0.15 && req.file.path !== prevImage) {
+                fs.unlink(req.file.path, (error) => {
+                    if (error) {
+                        console.error(error)
+                    } else {
+                        console.log(`Successfully deleted file: ${req.file.path}`)
+                    }
+                })
+                return res.status(400).send({ error: 'This or very similar image is already exist...' })
+            }
+
+            // resemble(req.file.path)
+            //     .compareTo(prevImage)
+            //     .onComplete(function (data) {
+            //         // The data object contains information about the difference between the images
+            //         console.log(data.rawMisMatchPercentage) // Outputs a numerical value representing the similarity
+            //     })
+        }
+        var imgsrc = 'http://localhost:8080/uploads/' + req.file.filename
+        var insertData = 'INSERT INTO images(imageId, file_src, userId) VALUES(?,?,?)'
+        db.query(insertData, [uuidv4(), imgsrc, req.body.userId], (err, result) => {
+            if (err) throw err
+            console.log('file uploaded')
+            res.send('Image uploaded successfully.')
+        })
     })
 })
 

@@ -7,6 +7,8 @@
 <script type="module">
 import axios from 'axios'
 import { getAuth } from 'firebase/auth'
+import Toastify from 'toastify-js'
+import 'toastify-js/src/toastify.css'
 export default {
     name: 'FileUpload',
     data() {
@@ -46,9 +48,36 @@ export default {
                         'Content-Type': 'multipart/form-data',
                     },
                 })
+                Toastify({
+                    text: 'Image uploaded successfully',
+                    duration: 5000,
+                    newWindow: true,
+                    close: true,
+                    gravity: 'bottom',
+                    position: 'right',
+                    stopOnFocus: true,
+                    style: {
+                        background: 'rgba(13, 180, 185, 1)',
+                        borderRadius: '12px',
+                    },
+                    onClick: function () {}, // Callback after click
+                }).showToast()
             } catch (err) {
-                console.log(err)
-                this.message = 'Something went wrong :('
+                Toastify({
+                    text: err.response.data.error,
+                    duration: 5000,
+                    newWindow: true,
+                    close: true,
+                    gravity: 'bottom',
+                    position: 'right',
+                    stopOnFocus: true,
+                    style: {
+                        background: 'rgba(254, 21, 21, 0.8)',
+                        borderRadius: '12px',
+                    },
+                    onClick: function () {}, // Callback after click
+                }).showToast()
+                console.log(err.response.data.error)
             }
         },
     },

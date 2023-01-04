@@ -96,9 +96,16 @@ export default {
     methods: {
         async getForumTopics() {
             this.currentUserId = getAuth().currentUser.uid
+            const firebaseToken = await getAuth().currentUser.getIdToken()
             try {
                 const response = await axios.get('/getAllForumTopics', {
                     baseURL: 'http://localhost:8080',
+                    params: {
+                        userId: this.currentUserId,
+                    },
+                    headers: {
+                        Authorization: `Bearer ${firebaseToken}`,
+                    },
                 })
                 this.forumTopics = response.data
                 console.log(this.forumTopics)
@@ -118,10 +125,15 @@ export default {
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
+                        const firebaseToken = await getAuth().currentUser.getIdToken()
                         await axios.delete('/deleteTopic', {
                             baseURL: 'http://localhost:8080',
                             params: {
                                 id: id,
+                                userId: this.currentUserId,
+                            },
+                            headers: {
+                                Authorization: `Bearer ${firebaseToken}`,
                             },
                         })
                         this.getForumTopics()

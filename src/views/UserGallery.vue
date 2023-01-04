@@ -57,10 +57,14 @@ export default {
 
         async getUserImages() {
             try {
+                const firebaseToken = await getAuth().currentUser.getIdToken()
                 const response = await axios.get('/getUserImages', {
                     baseURL: 'http://localhost:8080',
                     params: {
                         id: this.routerId,
+                    },
+                    headers: {
+                        Authorization: `Bearer ${firebaseToken}`,
                     },
                 })
                 this.images = response.data
@@ -69,6 +73,7 @@ export default {
             }
         },
         async deleteImage(id) {
+            const firebaseToken = await getAuth().currentUser.getIdToken()
             Swal.fire({
                 title: 'Are you sure?',
                 text: 'Your photo will be deleted!',
@@ -84,6 +89,10 @@ export default {
                             baseURL: 'http://localhost:8080',
                             params: {
                                 id: id,
+                                userId: this.routerId,
+                            },
+                            headers: {
+                                Authorization: `Bearer ${firebaseToken}`,
                             },
                         })
                         this.getUserImages()

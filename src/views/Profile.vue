@@ -92,8 +92,9 @@ import { getAuth, updateEmail, updatePassword, reauthenticateWithCredential, Ema
 import { useRouter, useRoute } from 'vue-router'
 import Swal from 'sweetalert2'
 import { async } from '@firebase/util'
+import Toastify from 'toastify-js'
+import 'toastify-js/src/toastify.css'
 
-const route = useRoute()
 const router = useRouter()
 
 const newEmail = ref('')
@@ -103,16 +104,9 @@ const rNewPassword = ref('')
 const currentUsername = ref('')
 const showModal = ref(false)
 const authPassword = ref('')
-const page = ref(1)
-const minCommentCountForPagination = ref(15)
-const commentsPerPage = ref(10)
-const filteredCommentsForPagination = ref([])
-const forumComments = ref([])
-const forumId = ref(route.params.id)
-const forumTitle = ref('')
-const forumDescription = ref('')
 const imageUrl = ref('https://i.picsum.photos/id/91/3504/2336.jpg?hmac=tK6z7RReLgUlCuf4flDKeg57o6CUAbgklgLsGL0UowU')
 const userEmail = ref('')
+const allUsers = ref('')
 
 //TODO: add success messages
 
@@ -122,7 +116,18 @@ onMounted(() => {
     getCurrentUserEmail()
 })
 
+const strongPassword = (pass) => {
+    const valid = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+=-])[A-Za-z\d!@#$%^&*()_+=-]{8,}$/
+    return valid.test(pass)
+}
+
+const validateEmail = (email) => {
+    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    return re.test(String(email).toLowerCase())
+}
+
 const getCurrentUserEmail = async () => {
+    const firebaseToken = await getAuth().currentUser.getIdToken()
     const user = await getAuth().currentUser
     userEmail.value = user.email
     try {
@@ -130,6 +135,9 @@ const getCurrentUserEmail = async () => {
             baseURL: 'http://localhost:8080',
             params: {
                 userId: user.uid,
+            },
+            headers: {
+                Authorization: `Bearer ${firebaseToken}`,
             },
         })
         currentUsername.value = response.data[0].userName
@@ -140,73 +148,109 @@ const getCurrentUserEmail = async () => {
 
 const deleteCurrentUser = async () => {
     const user = await getAuth().currentUser
+    const firebaseToken = await getAuth().currentUser.getIdToken()
 
     let deleteFireUserError = false
 
-    await deleteUser(user)
-        .catch((err) => {
-            console.log(err)
-            console.log(err.message)
-            if (err.message === 'Firebase: Error (auth/requires-recent-login).') {
-                deleteFireUserError = true
-                console.log('aaa')
-                showModal.value = true
-            } else {
-                deleteFireUserError = true
-                console.log('An error occurred:', err)
-                alert(err)
-            }
-        })
-        .then(async () => {
-            if (!deleteFireUserError) {
-                await axios
-                    .delete('/deleteUser', {
-                        baseURL: 'http://localhost:8080',
-                        params: {
-                            userId: user.uid,
-                        },
-                    })
-                    .then((response) => {
-                        console.log('Successfully deleted user from database')
-                        router.push('/')
-                    })
-                    .catch((error) => {
-                        console.error('Error deleting user from database:', error)
-                    })
-            }
-        })
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'Your account will be deleted!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!',
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            await deleteUser(user)
+                .catch((err) => {
+                    console.log(err)
+                    console.log(err.message)
+                    if (err.message === 'Firebase: Error (auth/requires-recent-login).') {
+                        deleteFireUserError = true
+                        console.log('aaa')
+                        showModal.value = true
+                    } else {
+                        deleteFireUserError = true
+                        console.log('An error occurred:', err)
+                        alert(err)
+                    }
+                })
+                .then(async () => {
+                    if (!deleteFireUserError) {
+                        await axios
+                            .delete('/deleteUser', {
+                                baseURL: 'http://localhost:8080',
+                                params: {
+                                    userId: user.uid,
+                                },
+                                headers: {
+                                    Authorization: `Bearer ${firebaseToken}`,
+                                },
+                            })
+                            .then((response) => {
+                                console.log('Successfully deleted user from database')
+                                router.push('/')
+                            })
+                            .catch((error) => {
+                                console.error('Error deleting user from database:', error)
+                            })
+                    }
+                })
+        }
+    })
+
     // TODO toasters
-
-    // let deleteDbUser = null
-
-    // Promise.all([deleteFireUser, deleteDbUser])
-    //     .then(() => {
-    //         console.log('Successfully deleted user from both Firebase and database')
-    //         router.push('/')
-    //     })
-    //     .catch((error) => {
-    //         console.error('Error deleting user:', error)
-    //     })
 }
 
 const updateUserEmail = async () => {
-    const user = await getAuth().currentUser
-    user.getIdToken(true)
-    console.log(user + newEmail.value)
-    updateEmail(user, newEmail.value)
-        .then(() => {
-            console.log('Email updated successfully')
-            getCurrentUserEmail()
-            newEmail.value = ''
-        })
-        .catch((err) => {
-            if (err.message === 'Firebase: Error (auth/requires-recent-login).') {
-                showModal.value = true
-            } else {
-                console.log('An error occurred:', err)
-                alert(err)
+    if (validateEmail(newEmail.value)) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'Your email will be updated!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, update it!',
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const user = await getAuth().currentUser
+                user.getIdToken(true)
+                updateEmail(user, newEmail.value)
+                    .then(() => {
+                        console.log('Email updated successfully')
+                        getCurrentUserEmail()
+                        newEmail.value = ''
+                        Swal.fire('Updated!', 'Your email has been updated.', 'success')
+                    })
+                    .catch((err) => {
+                        if (err.message === 'Firebase: Error (auth/requires-recent-login).') {
+                            showModal.value = true
+                        } else {
+                            console.log('An error occurred:', err)
+                            alert(err)
+                        }
+                    })
             }
         })
+    } else {
+        Toastify({
+            text: 'Wrong email format',
+            duration: 5000,
+            newWindow: true,
+            close: true,
+            gravity: 'top',
+            position: 'right',
+            stopOnFocus: true,
+            style: {
+                background: 'rgba(254, 21, 21, 0.8)',
+                borderRadius: '12px',
+                minWidth: '200px',
+                marginTop: '60px',
+            },
+        }).showToast()
+    }
 }
 
 const reauthenticate = () => {
@@ -223,70 +267,168 @@ const reauthenticate = () => {
 }
 
 const updateUsername = async () => {
-    const userId = getAuth().currentUser.uid
-    console.log(userId + newUsername.value)
-    const userData = { userId: userId, userName: newUsername.value }
+    const firebaseToken = getAuth().currentUser.getIdToken()
     try {
-        await axios.post('/updateUsername', userData, {
+        const response = await axios.get('/getAllUsernames', {
             baseURL: 'http://localhost:8080',
+            headers: {
+                Authorization: `Bearer ${firebaseToken}`,
+            },
         })
-        getCurrentUserEmail()
-        newUsername.value = ''
+        allUsers.value = response.data
     } catch (err) {
         console.log(err)
     }
+    if (allUsers.value.some((obj) => obj.userName === newUsername.value)) {
+        return Toastify({
+            text: `This username: '${newUsername.value}' already exist... :(`,
+            duration: 5000,
+            newWindow: true,
+            close: true,
+            gravity: 'top',
+            position: 'right',
+            stopOnFocus: true,
+            style: {
+                background: 'rgba(254, 21, 21, 0.8)',
+                borderRadius: '12px',
+                minWidth: '200px',
+                marginTop: '60px',
+            },
+        }).showToast()
+    }
+
+    const userId = getAuth().currentUser.uid
+    console.log(userId + newUsername.value)
+    if (!newUsername.value) {
+        return Toastify({
+            text: 'Enter username!',
+            duration: 5000,
+            newWindow: true,
+            close: true,
+            gravity: 'top',
+            position: 'right',
+            stopOnFocus: true,
+            style: {
+                background: 'rgba(254, 21, 21, 0.8)',
+                borderRadius: '12px',
+                minWidth: '200px',
+                marginTop: '60px',
+            },
+        }).showToast()
+    }
+
+    if (!newUsername.value.match(/^[a-zA-Z0-9]+$/)) {
+        return Toastify({
+            text: 'Only alphanumeric!',
+            duration: 5000,
+            newWindow: true,
+            close: true,
+            gravity: 'top',
+            position: 'right',
+            stopOnFocus: true,
+            style: {
+                background: 'rgba(254, 21, 21, 0.8)',
+                borderRadius: '12px',
+                minWidth: '200px',
+                marginTop: '60px',
+            },
+        }).showToast()
+    }
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'Your username will be updated!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, update it!',
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const userData = { userId: userId, userName: newUsername.value }
+            const firebaseToken = await getAuth().currentUser.getIdToken()
+            try {
+                await axios.post('/updateUsername', userData, {
+                    baseURL: 'http://localhost:8080',
+                    headers: {
+                        Authorization: `Bearer ${firebaseToken}`,
+                    },
+                })
+                getCurrentUserEmail()
+                newUsername.value = ''
+                Swal.fire('Updated!', 'Your username has been updated.', 'success')
+            } catch (err) {
+                console.log(err)
+            }
+        }
+    })
 }
 
 const updateUserPassword = async () => {
+    if (!strongPassword(newPassword.value)) {
+        newPassword.value = ''
+        rNewPassword.value = ''
+        return Toastify({
+            text: 'Password must be at least 8 characters long, must contain at least one lowercase and uppercase letter, one number and special character',
+            duration: 5000,
+            newWindow: true,
+            close: true,
+            gravity: 'top',
+            position: 'right',
+            stopOnFocus: true,
+            style: {
+                background: 'rgba(254, 21, 21, 0.8)',
+                borderRadius: '12px',
+                minWidth: '200px',
+                marginTop: '60px',
+            },
+        }).showToast()
+    }
     if (newPassword.value !== rNewPassword.value) {
-        alert('Passwords do not match')
-        return
+        newPassword.value = ''
+        rNewPassword.value = ''
+        return Toastify({
+            text: 'Passwords do not match...',
+            duration: 5000,
+            newWindow: true,
+            close: true,
+            gravity: 'top',
+            position: 'right',
+            stopOnFocus: true,
+            style: {
+                background: 'rgba(254, 21, 21, 0.8)',
+                borderRadius: '12px',
+                minWidth: '200px',
+                marginTop: '60px',
+            },
+        }).showToast()
     } else {
-        const user = await getAuth().currentUser
-        updatePassword(user, newPassword.value)
-            .then(() => {
-                console.log('Password updated successfully')
-                getCurrentUserEmail()
-            })
-            .catch((err) => {
-                if (err.message === 'Firebase: Error (auth/requires-recent-login).') {
-                    showModal.value = true
-                } else {
-                    console.log('An error occurred:', err.message)
-                }
-            })
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'Your password will be updated!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, update it!',
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const user = await getAuth().currentUser
+                updatePassword(user, newPassword.value)
+                    .then(() => {
+                        console.log('Password updated successfully')
+                        Swal.fire('Updated!', 'Your password has been updated.', 'success')
+                    })
+                    .catch((err) => {
+                        if (err.message === 'Firebase: Error (auth/requires-recent-login).') {
+                            showModal.value = true
+                        } else {
+                            console.log('An error occurred:', err.message)
+                        }
+                    })
+            }
+        })
     }
     newPassword.value = ''
     rNewPassword.value = ''
 }
-
-// TODO: delete user
-
-// const deleteComment = async (forumId, commentId) => {
-//     Swal.fire({
-//         title: 'Are you sure?',
-//         text: 'Your comment will be deleted!',
-//         icon: 'warning',
-//         showCancelButton: true,
-//         confirmButtonColor: '#3085d6',
-//         cancelButtonColor: '#d33',
-//         confirmButtonText: 'Yes, delete it!',
-//     }).then(async (result) => {
-//         if (result.isConfirmed) {
-//             try {
-//                 await axios.delete('/deleteComment', {
-//                     baseURL: 'http://localhost:8080',
-//                     params: {
-//                         forumId: forumId,
-//                         commentId: commentId,
-//                     },
-//                 })
-//                 getAllComments()
-//             } catch (err) {
-//                 console.log(err)
-//             }
-//             Swal.fire('Deleted!', 'Your comment has been deleted.', 'success')
-//         }
-//     })
-// }
 </script>

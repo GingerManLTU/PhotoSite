@@ -43,13 +43,17 @@ export default {
     },
     methods: {
         async getImages() {
-            const userId = getAuth().currentUser.uid
+            const userId = await getAuth().currentUser.uid
+            const firebaseToken = await getAuth().currentUser.getIdToken()
             try {
                 const response = await axios.get('/getAllImages', {
                     params: {
                         userId: userId,
                     },
                     baseURL: 'http://localhost:8080',
+                    headers: {
+                        Authorization: `Bearer ${firebaseToken}`,
+                    },
                 })
                 this.images = response.data
                 console.log(this.images)
@@ -59,10 +63,14 @@ export default {
         },
         async likeImage(imageId) {
             const userId = getAuth().currentUser.uid
+            const firebaseToken = await getAuth().currentUser.getIdToken()
             const userData = { userId: userId, imageId: imageId }
             try {
                 await axios.post('/likeImage', userData, {
                     baseURL: 'http://localhost:8080',
+                    headers: {
+                        Authorization: `Bearer ${firebaseToken}`,
+                    },
                 })
                 this.getImages()
             } catch (err) {

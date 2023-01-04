@@ -80,7 +80,7 @@ onMounted(() => {
 })
 
 const getAllComments = async () => {
-    // const forumId = route.params.id
+    const firebaseToken = await getAuth().currentUser.getIdToken()
     const userId = getAuth().currentUser.uid
     try {
         const response = await axios.get('/getAllForumComments', {
@@ -88,6 +88,9 @@ const getAllComments = async () => {
             params: {
                 forumId: forumId.value,
                 userId: userId,
+            },
+            headers: {
+                Authorization: `Bearer ${firebaseToken}`,
             },
         })
         forumComments.value = response.data
@@ -98,10 +101,16 @@ const getAllComments = async () => {
 
 const getForumTitle = async () => {
     try {
+        const firebaseToken = await getAuth().currentUser.getIdToken()
+        const userId = getAuth().currentUser.uid
         const response = await axios.get('/getForumTitle', {
             baseURL: 'http://localhost:8080',
             params: {
                 forumId: forumId.value,
+                userId: userId,
+            },
+            headers: {
+                Authorization: `Bearer ${firebaseToken}`,
             },
         })
         console.log(response.data)
@@ -124,9 +133,13 @@ const addComment = async () => {
         const auth = getAuth()
         const user = auth.currentUser.uid
         const userData = { forumId: forumId.value, userId: user, forumComment: comment.value }
+        const firebaseToken = await getAuth().currentUser.getIdToken()
         console.log(userData)
         axios.post('/addForumComment', userData, {
             baseURL: 'http://localhost:8080',
+            headers: {
+                Authorization: `Bearer ${firebaseToken}`,
+            },
         })
     } catch (err) {
         console.log(err + 'Comment created unsuccessfully :(')
@@ -137,9 +150,13 @@ const addComment = async () => {
 const likeComment = async (commentId) => {
     const userId = getAuth().currentUser.uid
     const userData = { userId: userId, commentId: commentId }
+    const firebaseToken = await getAuth().currentUser.getIdToken()
     try {
         await axios.post('/loveComment', userData, {
             baseURL: 'http://localhost:8080',
+            headers: {
+                Authorization: `Bearer ${firebaseToken}`,
+            },
         })
         getAllComments()
     } catch (err) {
@@ -151,9 +168,13 @@ const reportComment = async (commentId) => {
     console.log('aaa')
     const userId = getAuth().currentUser.uid
     const userData = { userId: userId, commentId: commentId }
+    const firebaseToken = await getAuth().currentUser.getIdToken()
     try {
         await axios.post('/reportComment', userData, {
             baseURL: 'http://localhost:8080',
+            headers: {
+                Authorization: `Bearer ${firebaseToken}`,
+            },
         })
         getAllComments()
     } catch (err) {
@@ -173,11 +194,17 @@ const deleteComment = async (forumId, commentId) => {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
+                const firebaseToken = await getAuth().currentUser.getIdToken()
+                const userId = getAuth().currentUser.uid
                 await axios.delete('/deleteComment', {
                     baseURL: 'http://localhost:8080',
                     params: {
                         forumId: forumId,
                         commentId: commentId,
+                        userId: userId,
+                    },
+                    headers: {
+                        Authorization: `Bearer ${firebaseToken}`,
                     },
                 })
                 getAllComments()

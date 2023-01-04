@@ -39,13 +39,16 @@ export default {
             console.log(image)
             const userId = getAuth().currentUser.uid
             const formData = new FormData()
+            const firebaseToken = await getAuth().currentUser.getIdToken()
             formData.append('file', image)
             formData.append('userId', userId)
+            console.log(firebaseToken)
             try {
                 await axios.post('/upload', formData, {
                     baseURL: 'http://localhost:8080',
                     headers: {
                         'Content-Type': 'multipart/form-data',
+                        Authorization: `Bearer ${firebaseToken}`,
                     },
                 })
                 Toastify({

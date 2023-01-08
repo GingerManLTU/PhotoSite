@@ -99,7 +99,6 @@ export default {
                     },
                 })
                 this.images = response.data
-                console.log(this.images)
             } catch (err) {
                 console.log(err)
             }
@@ -118,7 +117,6 @@ export default {
                     },
                 })
                 this.popularImages = response.data
-                console.log(this.popularImages)
             } catch (err) {
                 console.log(err)
             }

@@ -108,7 +108,6 @@ export default {
                     },
                 })
                 this.forumTopics = response.data
-                console.log(this.forumTopics)
             } catch (err) {
                 console.log(err)
             }
@@ -149,7 +148,6 @@ export default {
             return convertedData.toUTCString()
         },
         filterBy(index) {
-            console.log(index)
             this.dropdownData[index].click.call(this)
         },
     },

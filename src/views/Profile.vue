@@ -174,7 +174,6 @@ const deleteCurrentUser = async () => {
                     console.log(err.message)
                     if (err.message === 'Firebase: Error (auth/requires-recent-login).') {
                         deleteFireUserError = true
-                        console.log('aaa')
                         showModal.value = true
                     } else {
                         deleteFireUserError = true
@@ -321,7 +320,6 @@ const updateUsername = async () => {
     }
 
     const userId = getAuth().currentUser.uid
-    console.log(userId + newUsername.value)
     if (!newUsername.value) {
         return Toastify({
             text: 'Enter username!',
@@ -399,9 +397,7 @@ const getUserPoints = async () => {
                 Authorization: `Bearer ${firebaseToken}`,
             },
         })
-        console.log(response.data)
         userPoints.value = response.data[0].likesCount + response.data[0].lovedCommentsCount
-        console.log(userPoints.value)
     } catch (err) {
         console.log(err)
     }

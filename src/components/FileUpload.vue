@@ -36,13 +36,11 @@ export default {
             this.uploadImage(this.selectedFile)
         },
         async uploadImage(image) {
-            console.log(image)
             const userId = getAuth().currentUser.uid
             const formData = new FormData()
             const firebaseToken = await getAuth().currentUser.getIdToken()
             formData.append('file', image)
             formData.append('userId', userId)
-            console.log(firebaseToken)
             Toastify({
                 text: 'Comparing your image with already uploaded images... Soon we will inform you if the photo is successfully uploaded!',
                 duration: 5000,

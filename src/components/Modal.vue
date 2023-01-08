@@ -44,7 +44,6 @@ const addTopic = async () => {
         const user = await getAuth().currentUser.uid
         const firebaseToken = await getAuth().currentUser.getIdToken()
         const userData = { userId: user, title: title.value, description: description.value }
-        console.log(userData)
         axios.post('/createForumTopic', userData, {
             baseURL: 'http://localhost:8080',
             headers: {

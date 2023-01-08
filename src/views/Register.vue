@@ -139,9 +139,7 @@ const Register = async () => {
             try {
                 const auth = getAuth()
                 const user = auth.currentUser
-                console.log(user.uid)
                 const userData = { uid: user.uid, username: username.value }
-                console.log(userData)
                 axios.post('/createUser', userData, {
                     baseURL: 'http://localhost:8080',
                 })

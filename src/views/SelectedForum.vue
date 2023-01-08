@@ -113,18 +113,14 @@ const getForumTitle = async () => {
                 Authorization: `Bearer ${firebaseToken}`,
             },
         })
-        console.log(response.data)
         forumTitle.value = response.data[0].forumTitle
         forumDescription.value = response.data[0].forumDescription
-        console.log(forumComments.value)
     } catch (err) {
         console.log(err)
     }
 }
 
 const addComment = async () => {
-    // const forumId = route.params.id
-    console.log(forumId)
     if (comment.value === '') {
         alert('Write the comment!')
         return
@@ -134,7 +130,6 @@ const addComment = async () => {
         const user = auth.currentUser.uid
         const userData = { forumId: forumId.value, userId: user, forumComment: comment.value }
         const firebaseToken = await getAuth().currentUser.getIdToken()
-        console.log(userData)
         axios.post('/addForumComment', userData, {
             baseURL: 'http://localhost:8080',
             headers: {
@@ -165,7 +160,6 @@ const likeComment = async (commentId) => {
 }
 
 const reportComment = async (commentId) => {
-    console.log('aaa')
     const userId = getAuth().currentUser.uid
     const userData = { userId: userId, commentId: commentId }
     const firebaseToken = await getAuth().currentUser.getIdToken()
@@ -219,13 +213,7 @@ const deleteComment = async (forumId, commentId) => {
 const convertData = (data) => {
     const convertedData = new Date(data)
     return convertedData.toUTCString()
-    // this.routerId = this.$route.params.id
 }
-
-// const filterBy = (index) => {
-//     console.log(index)
-//     dropdownData[index].click.call(this)
-// }
 
 const applyPagination = computed(() => {
     return forumComments.value.length > minCommentCountForPagination.value

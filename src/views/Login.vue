@@ -2,12 +2,16 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
+import ForgetPassword from './ForgetPassword.vue'
+import Toastify from 'toastify-js'
+import 'toastify-js/src/toastify.css'
 
 const router = useRouter()
 
 const email = ref('')
 const password = ref('')
 const errMsg = ref()
+const showModal = ref(false)
 
 const Login = async () => {
     if (!email.value || !password.value) {
@@ -39,6 +43,21 @@ const Login = async () => {
 }
 
 const signInWithGoogle = () => {
+    return Toastify({
+        text: 'Google account currently unavailable....',
+        duration: 5000,
+        newWindow: true,
+        close: true,
+        gravity: 'top',
+        position: 'right',
+        stopOnFocus: true,
+        style: {
+            background: 'rgba(254, 21, 21, 0.8)',
+            borderRadius: '12px',
+            minWidth: '200px',
+        },
+    }).showToast()
+
     const provider = new GoogleAuthProvider()
     signInWithPopup(getAuth(), provider)
         .then((result) => {
@@ -54,6 +73,7 @@ const signInWithGoogle = () => {
 
 <template>
     <div class="wrapper-login">
+        <ForgetPassword v-if="showModal.value" v-bind="showModal.value"></ForgetPassword>
         <div class="navigation-flexbox">
             <div class="login-position">
                 <div class="login-text">
@@ -87,6 +107,9 @@ const signInWithGoogle = () => {
                         </div>
                         <div>
                             <p>Dont have an account? <router-link to="/register">Register</router-link></p>
+                        </div>
+                        <div style="margin-top: 24px">
+                            <p><router-link to="/forget">Forget password?</router-link></p>
                         </div>
                     </div>
                 </div>

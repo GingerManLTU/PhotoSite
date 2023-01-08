@@ -22,7 +22,9 @@
             </transition>
             <file-upload class="navigation-mobile__upload"></file-upload>
             <div class="navigation-mobile dropdown">
-                <v-avatar image="src/assets/avatar.jpg" size="45"></v-avatar>
+                <v-avatar size="45">
+                    <v-img src="https://picsum.photos/id/91/400/400" alt="profile" object-fit="cover"></v-img>
+                </v-avatar>
                 <div class="dropdown-content">
                     <a @click="router.push('/profile')">Profile</a>
                     <a @click="openGallery">Gallery</a>

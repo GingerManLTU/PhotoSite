@@ -22,6 +22,11 @@ const routes = [
         component: () => import('./views/Register.vue'),
     },
     {
+        path: '/forget',
+        name: 'Forget',
+        component: () => import('./views/ForgetPassword.vue'),
+    },
+    {
         path: '/gallery/:id',
         name: 'UserGallery',
         component: () => import('./views/UserGallery.vue'),

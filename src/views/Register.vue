@@ -66,9 +66,25 @@ const Register = async () => {
         }).showToast()
     }
 
-    if (allUsers.value.some((obj) => obj.userName === username.value)) {
+    if (allUsers.length !== 0 && allUsers.value.some((obj) => obj.userName === username.value)) {
         return Toastify({
             text: `This username: '${username.value}' already exist... :(`,
+            duration: 5000,
+            newWindow: true,
+            close: true,
+            gravity: 'top',
+            position: 'right',
+            stopOnFocus: true,
+            style: {
+                background: 'rgba(254, 21, 21, 0.8)',
+                borderRadius: '12px',
+                minWidth: '200px',
+            },
+        }).showToast()
+    }
+    if (username.value.length > 13) {
+        return Toastify({
+            text: `Username is too long, maximum 12 characters.`,
             duration: 5000,
             newWindow: true,
             close: true,
@@ -182,7 +198,7 @@ const Register = async () => {
                         </label>
                     </form>
                 </div>
-                <button class="submit-button" @click="Register">Sign Up</button>
+                <button class="submit-button" style="margin: 20px 0px" @click="Register">Sign Up</button>
                 <div>
                     <p>Have an account? <router-link to="/">Login</router-link></p>
                 </div>

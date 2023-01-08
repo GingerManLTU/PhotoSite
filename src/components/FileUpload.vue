@@ -43,6 +43,22 @@ export default {
             formData.append('file', image)
             formData.append('userId', userId)
             console.log(firebaseToken)
+            Toastify({
+                text: 'Comparing your image with already uploaded images... Soon we will inform you if the photo is successfully uploaded!',
+                duration: 5000,
+                newWindow: true,
+                close: true,
+                gravity: 'top',
+                position: 'right',
+                stopOnFocus: true,
+                style: {
+                    background: 'rgba(13, 180, 185, 1)',
+                    borderRadius: '12px',
+                    minWidth: '200px',
+                    marginTop: '60px',
+                },
+                onClick: function () {}, // Callback after click
+            }).showToast()
             try {
                 await axios.post('/upload', formData, {
                     baseURL: 'http://localhost:8080',
@@ -56,12 +72,14 @@ export default {
                     duration: 5000,
                     newWindow: true,
                     close: true,
-                    gravity: 'bottom',
+                    gravity: 'top',
                     position: 'right',
                     stopOnFocus: true,
                     style: {
                         background: 'rgba(13, 180, 185, 1)',
                         borderRadius: '12px',
+                        minWidth: '200px',
+                        marginTop: '60px',
                     },
                     onClick: function () {}, // Callback after click
                 }).showToast()
@@ -71,12 +89,14 @@ export default {
                     duration: 5000,
                     newWindow: true,
                     close: true,
-                    gravity: 'bottom',
+                    gravity: 'top',
                     position: 'right',
                     stopOnFocus: true,
                     style: {
                         background: 'rgba(254, 21, 21, 0.8)',
                         borderRadius: '12px',
+                        minWidth: '200px',
+                        marginTop: '60px',
                     },
                     onClick: function () {}, // Callback after click
                 }).showToast()

@@ -139,7 +139,7 @@ input
   background: rgba(0,0,0,0.2)
   color: #fff 
   width: 100px
-  margin: 24px
+  margin: 12px 0 12px 12px
   &:hover 
     border-color:#f7f7f7
     background: rgba(255, 0, 0, 0.49)
@@ -176,7 +176,6 @@ input
   justify-content: center
   display: flex
   padding:30px 0
-  max-height: 450px
   position: relative
 
 .login-form 
@@ -236,6 +235,15 @@ input
     box-shadow: 0px 2px 10px 4px #E4E7EC
     outline: none
 ::-moz-placeholder
+    color: white
+    padding: 0 10px
+::-webkit-input-placeholder
+    color: white
+    padding: 0 10px
+:-moz-placeholder
+    color: white
+    padding: 0 10px
+:-ms-input-placeholder
     color: white
     padding: 0 10px
 
@@ -417,7 +425,7 @@ input
   filter: blur(8px)
   -webkit-filter: blur(8px)
   background-repeat: no-repeat
-  position: absolute
+  position: fixed
   top: 0px
   right: 0px
   bottom: 0px
@@ -426,6 +434,7 @@ input
   -webkit-background-size: cover
   -o-background-size: cover
   background-size: cover
+  background-attachment: fixed
   &__block
     min-height: 100%
     position: absolute
@@ -498,7 +507,21 @@ input
         width: 300px
         height: 200px
         border-radius: 24px   
-        margin: 0 auto    
+        margin: 0 auto   
+        &-author
+          display: inline-block 
+          outline: none 
+          font-size: 14px 
+          line-height: 20px 
+          font-weight: 600 
+          border-radius: 12px
+          transition: box-shadow 0.2s ease 0s, -ms-transform 0.1s ease 0s, -webkit-transform 0.1s ease 0s, transform 0.1s ease 0s 
+          background: rgba(0,0,0,0.2)
+          color: #fff 
+          width: auto
+          padding: 6px 12px
+          margin: 24px 0 12px 46px
+
 
 .random-th
   width: 160px
@@ -763,5 +786,48 @@ input
         padding: 0.5rem 1rem
         font-size: 1rem
         cursor: pointer
+
+.carousel-name
+  font-size: 24px !important
+  background-color: rgba(0, 0, 0, 1) !important
+
+.images-modal
+  padding-top: 48px
+  margin-top: 67px
+  width: 100%
+  height: 100%
+  position: fixed
+  top: 0
+  left: 0
+  background-color: rgba(0, 0, 0, 0.7)
+  overflow-y: auto
+  z-index: 5
+  &__wrapper
+    
+    position: fixed
+    top: 50%
+    left: 50%
+    transform: translate(-50%, -50%)
+    width: 80%
+    max-width: calc( 100% - 120px )
+    height: auto
+    background-color: rgba(0, 0, 0, 0.2)
+    border-radius: 10px
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2)
+    overflow-y: auto
+  &__image
+    width: 100%
+    height: auto
+    max-height: calc(100vh - 100px)
+    border-radius: 10px
+    &-author
+      position: absolute
+      bottom: 20px
+      right: 20px
+      font-size: 24px
+      background-color: rgba(0, 0, 0, 0.7)
+      padding: 6px 12px
+      border-radius: 12px
+
 
 

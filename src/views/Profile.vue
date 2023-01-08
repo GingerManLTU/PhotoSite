@@ -24,15 +24,19 @@
                         <!-- end -->
                         <div class="profile-container__current">
                             <v-avatar size="65" variant="outlined">
-                                <v-img src="https://picsum.photos/id/91/400/400" alt="John" object-fit="cover"></v-img>
+                                <v-img src="https://picsum.photos/id/91/400/400" alt="profile" object-fit="cover"></v-img>
                             </v-avatar>
                             <v-spacer />
                             <br />
                             <p>{{ currentUsername }}</p>
                             <v-spacer />
                             <br />
-
                             <p>Email: {{ userEmail }}</p>
+                            <v-spacer />
+                            <br />
+                            <v-spacer />
+                            <br />
+                            <p>User points: {{ userPoints }}</p>
                         </div>
                         <div class="profile-container__form">
                             <v-spacer />
@@ -107,6 +111,7 @@ const authPassword = ref('')
 const imageUrl = ref('https://i.picsum.photos/id/91/3504/2336.jpg?hmac=tK6z7RReLgUlCuf4flDKeg57o6CUAbgklgLsGL0UowU')
 const userEmail = ref('')
 const allUsers = ref('')
+const userPoints = ref('')
 
 //TODO: add success messages
 
@@ -114,6 +119,7 @@ onMounted(() => {
     // getAllComments()
     // getForumTitle()
     getCurrentUserEmail()
+    getUserPoints()
 })
 
 const strongPassword = (pass) => {
@@ -296,6 +302,23 @@ const updateUsername = async () => {
             },
         }).showToast()
     }
+    if (newUsername.value.length > 13) {
+        return Toastify({
+            text: `Username is too long, maximum 12 characters.`,
+            duration: 5000,
+            newWindow: true,
+            close: true,
+            gravity: 'top',
+            position: 'right',
+            stopOnFocus: true,
+            style: {
+                background: 'rgba(254, 21, 21, 0.8)',
+                borderRadius: '12px',
+                minWidth: '200px',
+                marginTop: '60px',
+            },
+        }).showToast()
+    }
 
     const userId = getAuth().currentUser.uid
     console.log(userId + newUsername.value)
@@ -361,6 +384,27 @@ const updateUsername = async () => {
             }
         }
     })
+}
+
+const getUserPoints = async () => {
+    try {
+        const firebaseToken = await getAuth().currentUser.getIdToken()
+        const userId = getAuth().currentUser.uid
+        const response = await axios.get('/getUserPoints', {
+            baseURL: 'http://localhost:8080',
+            params: {
+                userId: userId,
+            },
+            headers: {
+                Authorization: `Bearer ${firebaseToken}`,
+            },
+        })
+        console.log(response.data)
+        userPoints.value = response.data[0].likesCount + response.data[0].lovedCommentsCount
+        console.log(userPoints.value)
+    } catch (err) {
+        console.log(err)
+    }
 }
 
 const updateUserPassword = async () => {

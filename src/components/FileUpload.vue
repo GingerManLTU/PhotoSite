@@ -19,6 +19,7 @@ export default {
             selectedFile: null,
         }
     },
+    emits: ['image-response'],
     methods: {
         handleFileImport() {
             this.isSelecting = true
@@ -58,13 +59,14 @@ export default {
                 onClick: function () {}, // Callback after click
             }).showToast()
             try {
-                await axios.post('/upload', formData, {
+                const response = await axios.post('/upload', formData, {
                     baseURL: 'http://localhost:8080',
                     headers: {
                         'Content-Type': 'multipart/form-data',
                         Authorization: `Bearer ${firebaseToken}`,
                     },
                 })
+                this.$emit('image-response', response.data)
                 Toastify({
                     text: 'Image uploaded successfully',
                     duration: 5000,

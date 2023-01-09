@@ -26,13 +26,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { defineEmits, ref } from 'vue'
 import axios from 'axios'
 import { getAuth } from 'firebase/auth'
 
 const dialog = ref(false)
 const title = ref('')
 const description = ref('')
+
+const emit = defineEmits(['forum-data'])
 
 const addTopic = async () => {
     if (title.value === '' || description.value === '') {
@@ -41,13 +43,16 @@ const addTopic = async () => {
         return
     }
     try {
-        const auth = getAuth()
-        const user = auth.currentUser.uid
+        const user = await getAuth().currentUser.uid
+        const firebaseToken = await getAuth().currentUser.getIdToken()
         const userData = { userId: user, title: title.value, description: description.value }
-        console.log(userData)
-        axios.post('/createForumTopic', userData, {
+        const response = await axios.post('/createForumTopic', userData, {
             baseURL: 'http://localhost:8080',
+            headers: {
+                Authorization: `Bearer ${firebaseToken}`,
+            },
         })
+        emit('forum-data', response.data)
     } catch (err) {
         console.log(err + 'Forum topic created unsuccessfully :(')
     }

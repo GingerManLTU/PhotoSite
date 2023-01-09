@@ -22,6 +22,11 @@ const routes = [
         component: () => import('./views/Register.vue'),
     },
     {
+        path: '/forget',
+        name: 'Forget',
+        component: () => import('./views/ForgetPassword.vue'),
+    },
+    {
         path: '/gallery/:id',
         name: 'UserGallery',
         component: () => import('./views/UserGallery.vue'),
@@ -43,6 +48,15 @@ const routes = [
         path: '/forum/:id',
         name: 'Selected',
         component: () => import('./views/SelectedForum.vue'),
+        meta: {
+            requiresAuth: true,
+        },
+    },
+    {
+        path: '/profile',
+        name: 'Profile',
+        component: () => import('./views/Profile.vue'),
+        //important allow just auth users
         meta: {
             requiresAuth: true,
         },

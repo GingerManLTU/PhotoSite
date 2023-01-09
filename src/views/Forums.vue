@@ -1,15 +1,3 @@
-<script setup>
-import NavigationBar from '../components/NavigationBar.vue'
-import Modal from '../components/Modal.vue'
-import HoverButton from '../components/HoverButton.vue'
-import { useRouter } from 'vue-router'
-const router = useRouter()
-
-const openSelectedTopic = (id) => {
-    router.push({ name: 'Selected', params: { id: id } })
-}
-</script>
-
 <template>
     <div class="wrapper-home"></div>
     <div class="wrapper-home__block">
@@ -18,7 +6,7 @@ const openSelectedTopic = (id) => {
             <div class="home-page gallery-page">
                 <div class="gallery-page__title">
                     <h1>Our creators forums!</h1>
-                    <Modal style="margin-top: 20px" />
+                    <Modal style="margin-top: 20px" @forum-data="updateForum" />
                     <!-- <HoverButton :buttonData="dropdownData" @button-selected="filterBy"><v-icon icon="mdi-filter-menu-outline" size="x-large" /></HoverButton> -->
                 </div>
                 <div>
@@ -96,12 +84,18 @@ export default {
     methods: {
         async getForumTopics() {
             this.currentUserId = getAuth().currentUser.uid
+            const firebaseToken = await getAuth().currentUser.getIdToken()
             try {
                 const response = await axios.get('/getAllForumTopics', {
                     baseURL: 'http://localhost:8080',
+                    params: {
+                        userId: this.currentUserId,
+                    },
+                    headers: {
+                        Authorization: `Bearer ${firebaseToken}`,
+                    },
                 })
                 this.forumTopics = response.data
-                console.log(this.forumTopics)
             } catch (err) {
                 console.log(err)
             }
@@ -118,10 +112,15 @@ export default {
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
+                        const firebaseToken = await getAuth().currentUser.getIdToken()
                         await axios.delete('/deleteTopic', {
                             baseURL: 'http://localhost:8080',
                             params: {
                                 id: id,
+                                userId: this.currentUserId,
+                            },
+                            headers: {
+                                Authorization: `Bearer ${firebaseToken}`,
                             },
                         })
                         this.getForumTopics()
@@ -132,14 +131,27 @@ export default {
                 }
             })
         },
+        updateForum(forum) {
+            this.forumTopics.unshift(forum.data)
+        },
         convertData(data) {
             const convertedData = new Date(data)
             return convertedData.toUTCString()
         },
         filterBy(index) {
-            console.log(index)
             this.dropdownData[index].click.call(this)
         },
     },
+}
+</script>
+<script setup>
+import NavigationBar from '../components/NavigationBar.vue'
+import Modal from '../components/Modal.vue'
+import HoverButton from '../components/HoverButton.vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
+const openSelectedTopic = (id) => {
+    router.push({ name: 'Selected', params: { id: id } })
 }
 </script>

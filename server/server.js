@@ -67,19 +67,22 @@ const upload = multer({
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
-const db = mysql.createConnection({
-    host: dbi.HOST,
-    port: dbi.PORT,
-    user: dbi.USER,
-    password: dbi.PASSWORD,
-    database: dbi.DB,
-})
-db.connect(function (err) {
-    if (err) {
-        return console.error('error: ' + err.message)
-    }
-    console.log('Connected to the MySQL server.')
-})
+const getConnection = () => {
+    const db = mysql.createConnection({
+        host: dbi.HOST,
+        port: dbi.PORT,
+        user: dbi.USER,
+        password: dbi.PASSWORD,
+        database: dbi.DB,
+    })
+    db.connect(function (err) {
+        if (err) {
+            return console.error('error: ' + err.message)
+        }
+        console.log('Connected to the MySQL server.')
+    })
+    return db
+}
 
 app.use(cors())
 app.use(express.json())
@@ -149,13 +152,24 @@ app.post('/upload', upload.single('file'), async (req, res) => {
                         //         console.log(data.rawMisMatchPercentage) // Outputs a numerical value representing the similarity
                         //     })
                     }
+                    const db = getConnection()
                     var imgsrc = 'http://localhost:8080/uploads/' + req.file.filename
-                    const query = 'INSERT INTO images(imageId, file_src, userId) VALUES(?,?,?)'
-                    const values = [uuidv4(), imgsrc, req.body.userId]
-                    db.query(query, values, (err, result) => {
+                    const selectQuery = 'SELECT userName FROM users WHERE userId = ?'
+                    const selectValue = [req.body.userId]
+                    const query = 'INSERT INTO images(imageId, file_src, userId, imageType) VALUES(?,?,?,?)'
+                    const imageId = uuidv4()
+                    const values = [imageId, imgsrc, req.body.userId, 0]
+                    db.query(selectQuery, selectValue, (err, result) => {
                         if (err) throw err
-                        console.log('file uploaded')
-                        res.send('Image uploaded successfully.')
+                        console.log(result)
+                        const userName = result[0].userName
+                        db.query(query, values, (err, result) => {
+                            if (err) throw err
+                            console.log('file uploaded')
+                            result.data = { imageId, file_src: imgsrc, userId: req.body.userId, imageType: 0, likeCount: 0, userName }
+                            res.send(result)
+                            db.end()
+                        })
                     })
                 })
             } else {
@@ -172,11 +186,13 @@ app.post('/createUser', (req, res) => {
         return res.status(400).send({ error: 'Invalid id or username' })
     }
     try {
+        const db = getConnection()
         const query = 'INSERT INTO users(userId, userName) VALUES(?,?)'
         const values = [req.body.uid, req.body.username]
         db.query(query, values, (err, result) => {
             if (err) console.log(err)
             console.log('User dublicated successfully')
+            db.end()
         })
     } catch (error) {
         res.status(500).send({ error: 'An error occurred while processing the request:' + error })
@@ -191,8 +207,9 @@ app.get('/getAllImages', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query =
-                    'SELECT images.imageId, images.file_src, images.userId, users.userName, Count(likeId) AS likeCount, (SELECT Count(likeId) FROM likes WHERE images.imageId = likes.imageId AND likes.userId = ?) AS userLikeCount FROM images LEFT JOIN likes ON images.imageId = likes.imageId LEFT JOIN users ON users.userId = images.userId GROUP BY images.imageId ORDER BY images.createdAt DESC'
+                    'SELECT images.imageId, images.file_src, images.userId, users.userName, Count(likeId) AS likeCount, (SELECT Count(likeId) FROM likes WHERE images.imageId = likes.imageId AND likes.userId = ?) AS userLikeCount FROM images LEFT JOIN likes ON images.imageId = likes.imageId LEFT JOIN users ON users.userId = images.userId WHERE images.imageType != 1 GROUP BY images.imageId ORDER BY images.createdAt DESC'
                 const values = [req.query.userId]
                 db.query(query, values, (err, results) => {
                     if (err) {
@@ -201,6 +218,7 @@ app.get('/getAllImages', (req, res) => {
                     } else {
                         res.json(results)
                     }
+                    db.end()
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -219,8 +237,9 @@ app.get('/getPopularImages', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query =
-                    'SELECT images.imageId, images.file_src, images.userId, users.userName, COUNT(likeId) AS likeCount FROM images LEFT JOIN likes ON images.imageId = likes.imageId LEFT JOIN users ON users.userId = images.userId GROUP BY images.imageId ORDER BY likeCount DESC LIMIT 10'
+                    'SELECT images.imageId, images.file_src, images.userId, users.userName, COUNT(likeId) AS likeCount FROM images LEFT JOIN likes ON images.imageId = likes.imageId LEFT JOIN users ON users.userId = images.userId WHERE images.imageType != 1 GROUP BY images.imageId ORDER BY likeCount DESC LIMIT 10'
                 const values = [req.query.userId]
                 db.query(query, values, (err, results) => {
                     if (err) {
@@ -229,6 +248,7 @@ app.get('/getPopularImages', (req, res) => {
                     } else {
                         res.json(results)
                     }
+                    db.end()
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -247,7 +267,8 @@ app.get('/getUserImages', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.id).then((isValidToken) => {
             if (isValidToken) {
-                const query = 'SELECT * FROM images WHERE userId = ?'
+                const db = getConnection()
+                const query = 'SELECT * FROM images WHERE userId = ? ORDER BY images.createdAt DESC'
                 const values = [req.query.id]
                 db.query(query, values, (err, results) => {
                     if (err) {
@@ -256,6 +277,7 @@ app.get('/getUserImages', (req, res) => {
                     } else {
                         res.json(results)
                     }
+                    db.end()
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -274,6 +296,7 @@ app.delete('/deleteImage', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query = 'DELETE FROM images WHERE images.imageId = ?'
                 const values = [req.query.id]
                 db.query(query, values, (err, result) => {
@@ -283,6 +306,7 @@ app.delete('/deleteImage', (req, res) => {
                         res.send('Image deleted succ.')
                         console.log('Image deleted successfully')
                     }
+                    db.end()
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -301,6 +325,7 @@ app.post('/likeImage', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.body.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query = 'SELECT COUNT(likeId) AS isSelected FROM likes WHERE userId = ? and imageId = ?'
                 const values = [req.body.userId, req.body.imageId]
                 let isSelected
@@ -319,6 +344,7 @@ app.post('/likeImage', (req, res) => {
                                     res.send('Image unliked')
                                     console.log('Image deleted successfully')
                                 }
+                                db.end()
                             })
                         } else {
                             const query = 'INSERT INTO likes(likeId, userId, imageId) VALUES(?,?,?)'
@@ -330,6 +356,7 @@ app.post('/likeImage', (req, res) => {
                                     res.send('Image liked successfully.')
                                     console.log('User liked image successfully!')
                                 }
+                                db.end()
                             })
                         }
                     }
@@ -351,11 +378,22 @@ app.post('/createForumTopic', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.body.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query = 'INSERT INTO forum(forumId, userId, forumTitle, forumDescription) VALUES(?,?,?,?)'
-                const values = [uuidv4(), req.body.userId, req.body.title, req.body.description]
-                db.query(query, values, (err, result) => {
+                const forumId = uuidv4()
+                const values = [forumId, req.body.userId, req.body.title, req.body.description]
+                const selectQuery = 'SELECT userName FROM users WHERE userId = ?'
+                const selectValue = [req.body.userId]
+                db.query(selectQuery, selectValue, (err, result) => {
                     if (err) throw err
-                    console.log('Forum created successfully')
+                    const userName = result[0].userName
+                    db.query(query, values, (err, result) => {
+                        if (err) throw err
+                        console.log('Forum created successfully')
+                        result.data = { forumId, userId: req.body.userId, forumTitle: req.body.title, forumDescription: req.body.description, userName, createdAt: new Date() }
+                        res.send(result)
+                        db.end()
+                    })
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -371,6 +409,7 @@ app.get('/getAllForumTopics', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query =
                     'SELECT forumId, forumTitle, forumDescription, forum.userId, unix_timestamp(createdAt) * 1000 as createdAt, users.userName FROM forum LEFT JOIN users ON forum.userId = users.userId'
                 db.query(query, (err, results) => {
@@ -380,6 +419,7 @@ app.get('/getAllForumTopics', (req, res) => {
                     } else {
                         res.json(results)
                     }
+                    db.end()
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -398,6 +438,7 @@ app.post('/addForumComment', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.body.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query = 'INSERT INTO forumComments(commentId, forumId, userId, forumComment) VALUES(?,?,?,?)'
                 const values = [uuidv4(), req.body.forumId, req.body.userId, req.body.forumComment]
                 db.query(query, values, (err, result) => {
@@ -407,6 +448,7 @@ app.post('/addForumComment', (req, res) => {
                         res.send('Comment added successfully.')
                         console.log('Image deleted successfully')
                     }
+                    db.end()
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -425,6 +467,7 @@ app.get('/getAllForumComments', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query = `SELECT forumComments.commentId, forumComments.forumId, forumComments.userId, forumComment, unix_timestamp(forumComments.createdAt) * 1000 as createdAt, forum.forumTitle, forum.forumDescription, users.userName, COUNT(reportedComments.reportId) as reportCount, 
     (SELECT COUNT(loveId) FROM lovedComments WHERE forumComments.commentId = lovedComments.commentId) AS loveCount,
     (SELECT COUNT(loveId) FROM lovedComments WHERE userId = ? and commentId = forumComments.commentId) AS isLoved
@@ -443,6 +486,7 @@ app.get('/getAllForumComments', (req, res) => {
                     } else {
                         res.json(results)
                     }
+                    db.end()
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -461,6 +505,7 @@ app.get('/getForumTitle', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query = 'SELECT forumTitle, forumDescription FROM forum WHERE forumId = ?'
                 const values = [req.query.forumId]
                 db.query(query, values, (err, results) => {
@@ -470,6 +515,7 @@ app.get('/getForumTitle', (req, res) => {
                     } else {
                         res.json(results)
                     }
+                    db.end()
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -488,6 +534,7 @@ app.delete('/deleteTopic', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query = 'DELETE FROM forum WHERE forumId = ?'
                 const values = [req.query.id]
                 db.query(query, values, (err, result) => {
@@ -497,6 +544,7 @@ app.delete('/deleteTopic', (req, res) => {
                         res.send('Topic deleted succ.')
                         console.log('Topic deleted successfully')
                     }
+                    db.end()
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -515,6 +563,7 @@ app.post('/loveComment', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.body.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query = 'SELECT COUNT(loveId) AS isLoved FROM lovedComments WHERE userId = ? and commentId = ?'
                 const values = [req.body.userId, req.body.commentId]
                 db.query(query, values, (err, result) => {
@@ -532,6 +581,7 @@ app.post('/loveComment', (req, res) => {
                                     res.send('Comment unloved')
                                     console.log('Comment unloved')
                                 }
+                                db.end()
                             })
                         } else {
                             const query = 'INSERT INTO lovedComments(loveId, userId, commentId) VALUES(?,?,?)'
@@ -543,6 +593,7 @@ app.post('/loveComment', (req, res) => {
                                     res.send('Comment liked successfully.')
                                     console.log('User loved comment successfully!')
                                 }
+                                db.end()
                             })
                         }
                     }
@@ -564,6 +615,7 @@ app.post('/reportComment', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.body.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query =
                     'SELECT (SELECT COUNT(reportId) FROM reportedComments WHERE userId = ? and commentId = ?) AS isReported, (SELECT COUNT(reportId) FROM reportedComments WHERE commentId = ?) AS reportCount'
                 const values = [req.body.userId, req.body.commentId, req.body.commentId]
@@ -582,6 +634,7 @@ app.post('/reportComment', (req, res) => {
                                     res.send('Comment deleted because reached report limit')
                                     console.log('Comment deleted because reached report limit')
                                 }
+                                db.end()
                             })
                         } else if (!result[0].isReported) {
                             const query = 'INSERT INTO reportedComments(reportId, userId, commentId) VALUES(?,?,?)'
@@ -593,6 +646,7 @@ app.post('/reportComment', (req, res) => {
                                     res.send('Comment reported successfully.')
                                     console.log('User reported comment successfully!')
                                 }
+                                db.end()
                             })
                         } else {
                             return
@@ -616,6 +670,7 @@ app.delete('/deleteComment', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query = 'DELETE FROM forumComments WHERE forumId = ? and commentId = ?'
                 const values = [req.query.forumId, req.query.commentId]
                 db.query(query, values, (err, result) => {
@@ -625,6 +680,7 @@ app.delete('/deleteComment', (req, res) => {
                         res.send('Comment deleted succ.')
                         console.log('Comment deleted successfully')
                     }
+                    db.end()
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -643,7 +699,7 @@ app.get('/getUsername', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
             if (isValidToken) {
-                console.log(isValidToken)
+                const db = getConnection()
                 const query = `SELECT userName FROM users WHERE userId = ?`
                 const values = [req.query.userId]
                 db.query(query, values, (err, results) => {
@@ -653,6 +709,7 @@ app.get('/getUsername', (req, res) => {
                     } else {
                         res.json(results)
                     }
+                    db.end()
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -671,6 +728,7 @@ app.post('/updateUsername', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.body.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query = 'UPDATE users SET userName = ? WHERE userId = ?'
                 const values = [req.body.userName, req.body.userId]
                 db.query(query, values, (err, result) => {
@@ -680,6 +738,7 @@ app.post('/updateUsername', (req, res) => {
                         res.send('Username updated successfully.')
                         console.log('Username updated successfully')
                     }
+                    db.end()
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -698,6 +757,7 @@ app.delete('/deleteUser', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
             if (isValidToken) {
+                const db = getConnection()
                 const query = 'DELETE FROM users WHERE userId = ?'
                 const values = [req.query.userId]
 
@@ -708,6 +768,7 @@ app.delete('/deleteUser', (req, res) => {
                         res.send('User deleted succ.')
                         console.log('User deleted successfully')
                     }
+                    db.end()
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -720,6 +781,7 @@ app.delete('/deleteUser', (req, res) => {
 
 app.get('/getAllUsernames', (req, res) => {
     try {
+        const db = getConnection()
         const query = 'SELECT userName FROM users'
         db.query(query, (err, results) => {
             if (err) {
@@ -728,6 +790,7 @@ app.get('/getAllUsernames', (req, res) => {
             } else {
                 res.json(results)
             }
+            db.end()
         })
     } catch (error) {
         res.status(500).send({ error: 'An error occurred while processing the request:' + error })
@@ -735,15 +798,71 @@ app.get('/getAllUsernames', (req, res) => {
 })
 
 app.get('/getUserPoints', (req, res) => {
+    if (!req.query.userId) {
+        return res.status(400).send({ error: 'Invalid request data' })
+    }
     try {
-        const query = 'SELECT(SELECT COUNT(*) FROM likes WHERE userId = ?) AS likesCount,(SELECT COUNT(*) FROM lovedComments WHERE userId = ?) AS lovedCommentsCount'
-        const values = [req.query.userId, req.query.userId]
-        db.query(query, values, (err, results) => {
-            if (err) {
-                console.log(err)
-                res.json(err)
+        const idToken = req.headers.authorization.split('Bearer ')[1]
+        verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
+            if (isValidToken) {
+                const db = getConnection()
+                const query = 'SELECT(SELECT COUNT(*) FROM likes WHERE userId = ?) AS likesCount,(SELECT COUNT(*) FROM lovedComments WHERE userId = ?) AS lovedCommentsCount'
+                const values = [req.query.userId, req.query.userId]
+                db.query(query, values, (err, results) => {
+                    if (err) {
+                        console.log(err)
+                        res.json(err)
+                    } else {
+                        res.json(results)
+                    }
+                    db.end()
+                })
             } else {
-                res.json(results)
+                res.status(401).send({ error: 'Unauthorized' })
+            }
+        })
+    } catch (error) {
+        res.status(500).send({ error: 'An error occurred while processing the request:' + error })
+    }
+})
+
+app.post('/updateImageType', (req, res) => {
+    console.log(req.body)
+    if (!req.body.imageId || !req.body.userId || req.body.imageType === null) {
+        return res.status(400).send({ error: 'Invalid request data' })
+    }
+    try {
+        const idToken = req.headers.authorization.split('Bearer ')[1]
+        verifyIdToken(idToken, req.body.userId).then((isValidToken) => {
+            if (isValidToken) {
+                const db = getConnection()
+                if (req.body.imageType) {
+                    const query = 'UPDATE images SET imageType = 0 WHERE imageId = ?'
+                    const values = [req.body.imageId]
+                    db.query(query, values, (err, result) => {
+                        if (err) {
+                            throw err
+                        } else {
+                            res.send('Image type updated successfully.')
+                            console.log('Image type updated successfully')
+                        }
+                        db.end()
+                    })
+                } else {
+                    const query = 'UPDATE images SET imageType = 1 WHERE imageId = ?'
+                    const values = [req.body.imageId]
+                    db.query(query, values, (err, result) => {
+                        if (err) {
+                            throw err
+                        } else {
+                            res.send('Image type updated successfully.')
+                            console.log('Image type updated successfully')
+                        }
+                        db.end()
+                    })
+                }
+            } else {
+                res.status(401).send({ error: 'Unauthorized' })
             }
         })
     } catch (error) {

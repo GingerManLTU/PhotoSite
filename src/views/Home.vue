@@ -5,7 +5,7 @@ import NavigationBar from '../components/NavigationBar.vue'
 <template>
     <div class="wrapper-home"></div>
     <div class="wrapper-home__block">
-        <NavigationBar></NavigationBar>
+        <NavigationBar @image-response="uploadedImage"></NavigationBar>
         <div class="nav-wrapper">
             <div class="home-page gallery-page">
                 <div class="gallery-page__title">
@@ -136,6 +136,9 @@ export default {
             } catch (err) {
                 console.log(err)
             }
+        },
+        uploadedImage(image) {
+            this.images.unshift(image.data)
         },
     },
 }

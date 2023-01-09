@@ -20,7 +20,7 @@
                     <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: 'Profile' }">Profile</router-link></li>
                 </ul>
             </transition>
-            <file-upload class="navigation-mobile__upload"></file-upload>
+            <file-upload class="navigation-mobile__upload" @image-response="$emit('image-response', $event)"></file-upload>
             <div class="navigation-mobile dropdown">
                 <v-avatar size="45">
                     <v-img src="https://picsum.photos/id/91/400/400" alt="profile" object-fit="cover"></v-img>

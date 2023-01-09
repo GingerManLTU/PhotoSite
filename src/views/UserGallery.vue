@@ -20,6 +20,10 @@ import NavigationBar from '../components/NavigationBar.vue'
                             <v-icon icon="mdi-delete" size="small" @click="" />
                             Delete
                         </button>
+                        <button @click="changeImageType(image.imageId, image.imageType)" class="button-main">
+                            <v-icon icon="mdi-swap-horizontal" size="small" @click="" />
+                            {{ image.imageType ? 'Public' : 'Private' }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -102,6 +106,22 @@ export default {
                     Swal.fire('Deleted!', 'Your photo has been deleted.', 'success')
                 }
             })
+        },
+        async changeImageType(imageId, imageType) {
+            const userId = getAuth().currentUser.uid
+            const userData = { userId: userId, imageId: imageId, imageType: imageType }
+            const firebaseToken = await getAuth().currentUser.getIdToken()
+            try {
+                await axios.post('/updateImageType', userData, {
+                    baseURL: 'http://localhost:8080',
+                    headers: {
+                        Authorization: `Bearer ${firebaseToken}`,
+                    },
+                })
+                this.getUserImages()
+            } catch (err) {
+                console.log(err)
+            }
         },
     },
 }

@@ -28,7 +28,7 @@
                                 </td>
                                 <td @click="openSelectedTopic(topic.forumId)" style="cursor: pointer">{{ topic.userName }}</td>
                                 <td @click="openSelectedTopic(topic.forumId)" style="cursor: pointer">{{ convertData(topic.createdAt) }}</td>
-                                <td class="random-th__button"><v-icon v-if="currentUserId === topic.userId" icon="mdi-delete" size="large" @click="deleteTopic(topic.forumId)" /></td>
+                                <td class="random-th__button"><v-icon v-if="currentUserId === topic.userId" icon="mdi-delete" size="large" @click="deleteTopic(topic.forumId, topic.userId)" /></td>
                             </tr>
                         </tbody>
                     </v-table>
@@ -100,7 +100,7 @@ export default {
                 console.log(err)
             }
         },
-        deleteTopic(id) {
+        deleteTopic(forumId, forumUserId) {
             Swal.fire({
                 title: 'Are you sure?',
                 text: 'Your topic will be deleted!',
@@ -116,8 +116,9 @@ export default {
                         await axios.delete('/deleteTopic', {
                             baseURL: 'http://localhost:8080',
                             params: {
-                                id: id,
+                                forumId: forumId,
                                 userId: this.currentUserId,
+                                forumUserId: forumUserId,
                             },
                             headers: {
                                 Authorization: `Bearer ${firebaseToken}`,

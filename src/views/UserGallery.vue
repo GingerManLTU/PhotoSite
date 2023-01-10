@@ -16,13 +16,13 @@ import NavigationBar from '../components/NavigationBar.vue'
                         <div class="gallery-page__image-card-photo-wrapper">
                             <img class="gallery-page__image-card-photo" :src="image.file_src" />
                         </div>
-                        <button @click="deleteImage(image.imageId)" class="button-main">
+                        <button @click="deleteImage(image.imageId, image.userId)" class="button-main">
                             <v-icon icon="mdi-delete" size="small" @click="" />
                             Delete
                         </button>
                         <button @click="changeImageType(image.imageId, image.imageType)" class="button-main">
                             <v-icon icon="mdi-swap-horizontal" size="small" @click="" />
-                            {{ image.imageType ? 'Public' : 'Private' }}
+                            {{ image.imageType ? 'Private' : 'Public' }}
                         </button>
                     </div>
                 </div>
@@ -76,7 +76,7 @@ export default {
                 console.log(err)
             }
         },
-        async deleteImage(id) {
+        async deleteImage(imageId, imageUserId) {
             const firebaseToken = await getAuth().currentUser.getIdToken()
             Swal.fire({
                 title: 'Are you sure?',
@@ -92,8 +92,9 @@ export default {
                         await axios.delete('/deleteImage', {
                             baseURL: 'http://localhost:8080',
                             params: {
-                                id: id,
+                                imageId: imageId,
                                 userId: this.routerId,
+                                imageUserId: imageUserId,
                             },
                             headers: {
                                 Authorization: `Bearer ${firebaseToken}`,

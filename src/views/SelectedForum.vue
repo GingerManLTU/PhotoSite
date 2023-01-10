@@ -38,7 +38,7 @@
                                 <div class="forum-container__comments-love">{{ comment.loveCount === 0 ? '' : comment.loveCount }}</div>
                                 <v-icon v-if="comment.reportCount === 1" class="forum-container__comments-buttons-space cursor-none" icon="mdi-alert" size="x-large" />
                                 <v-icon v-else class="forum-container__comments-buttons-space" icon="mdi-alert-outline" size="x-large" @click="reportComment(comment.commentId)" />
-                                <v-icon v-if="isUserOwner(comment.userId)" icon="mdi-delete" size="x-large" @click="deleteComment(comment.forumId, comment.commentId)" />
+                                <v-icon v-if="isUserOwner(comment.userId)" icon="mdi-delete" size="x-large" @click="deleteComment(comment.forumId, comment.commentId, comment.userId)" />
                             </div>
                         </div>
                     </div>
@@ -130,7 +130,7 @@ const addComment = async () => {
         const user = auth.currentUser.uid
         const userData = { forumId: forumId.value, userId: user, forumComment: comment.value }
         const firebaseToken = await getAuth().currentUser.getIdToken()
-        axios.post('/addForumComment', userData, {
+        await axios.post('/addForumComment', userData, {
             baseURL: 'http://localhost:8080',
             headers: {
                 Authorization: `Bearer ${firebaseToken}`,
@@ -176,7 +176,7 @@ const reportComment = async (commentId) => {
     }
 }
 
-const deleteComment = async (forumId, commentId) => {
+const deleteComment = async (forumId, commentId, commentUserId) => {
     Swal.fire({
         title: 'Are you sure?',
         text: 'Your comment will be deleted!',
@@ -196,6 +196,7 @@ const deleteComment = async (forumId, commentId) => {
                         forumId: forumId,
                         commentId: commentId,
                         userId: userId,
+                        commentUserId: commentUserId,
                     },
                     headers: {
                         Authorization: `Bearer ${firebaseToken}`,

@@ -106,76 +106,82 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     if (req.fileValidationError) {
         return res.status(400).send({ error: 'Only image files are allowed' })
     }
+    if (req.file.size === 0) {
+        return res.status(400).send({ error: 'Empty files are not allowed' })
+    }
     try {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         console.log(idToken, req.body.userId)
-        verifyIdToken(idToken, req.body.userId).then((isValidToken) => {
-            if (isValidToken) {
-                const imageExtensions = ['jpg', 'jpeg', 'png']
-                fs.readdir('./uploads', async (err, files) => {
-                    if (err) {
-                        console.error(err)
-                        return
-                    }
-                    //TODO make sure that only images are uploaded
-
-                    const imagePaths = files
-                        .filter((file) => {
-                            const fileExtension = file.split('.').pop()
-                            return imageExtensions.includes(fileExtension)
-                        })
-                        .map((file) => path.join('uploads', file))
-
-                    const selectedImage = await Jimp.read(req.file.path)
-
-                    for (const prevImage of imagePaths) {
-                        console.log(req.file.path, prevImage)
-
-                        const existingImage = await Jimp.read(prevImage)
-                        const distance = Jimp.distance(selectedImage, existingImage)
-                        console.log(distance)
-                        if (distance < 0.15 && req.file.path !== prevImage) {
-                            fs.unlink(req.file.path, (error) => {
-                                if (error) {
-                                    console.error(error)
-                                } else {
-                                    console.log(`Successfully deleted file: ${req.file.path}`)
-                                }
-                            })
-                            return res.status(400).send({ error: 'This or a very similar image already exist...' })
+        verifyIdToken(idToken, req.body.userId)
+            .then((isValidToken) => {
+                if (isValidToken) {
+                    const imageExtensions = ['jpg', 'jpeg', 'png']
+                    fs.readdir('./uploads', async (err, files) => {
+                        if (err) {
+                            console.error(err)
+                            return
                         }
 
-                        // resemble(req.file.path)
-                        //     .compareTo(prevImage)
-                        //     .onComplete(function (data) {
-                        //         // The data object contains information about the difference between the images
-                        //         console.log(data.rawMisMatchPercentage) // Outputs a numerical value representing the similarity
-                        //     })
-                    }
-                    const db = getConnection()
-                    var imgsrc = 'http://localhost:8080/uploads/' + req.file.filename
-                    const selectQuery = 'SELECT userName FROM users WHERE userId = ?'
-                    const selectValue = [req.body.userId]
-                    const query = 'INSERT INTO images(imageId, file_src, userId, imageType) VALUES(?,?,?,?)'
-                    const imageId = uuidv4()
-                    const values = [imageId, imgsrc, req.body.userId, 0]
-                    db.query(selectQuery, selectValue, (err, result) => {
-                        if (err) throw err
-                        console.log(result)
-                        const userName = result[0].userName
-                        db.query(query, values, (err, result) => {
+                        const imagePaths = files
+                            .filter((file) => {
+                                const fileExtension = file.split('.').pop()
+                                return imageExtensions.includes(fileExtension)
+                            })
+                            .map((file) => path.join('uploads', file))
+
+                        const selectedImage = await Jimp.read(req.file.path)
+
+                        for (const prevImage of imagePaths) {
+                            console.log(req.file.path, prevImage)
+
+                            const existingImage = await Jimp.read(prevImage)
+                            const distance = Jimp.distance(selectedImage, existingImage)
+                            console.log(distance)
+                            if (distance < 0.15 && req.file.path !== prevImage) {
+                                fs.unlink(req.file.path, (error) => {
+                                    if (error) {
+                                        console.error(error)
+                                    } else {
+                                        console.log(`Successfully deleted file: ${req.file.path}`)
+                                    }
+                                })
+                                return res.status(400).send({ error: 'This or a very similar image already exist...' })
+                            }
+
+                            // resemble(req.file.path)
+                            //     .compareTo(prevImage)
+                            //     .onComplete(function (data) {
+                            //         // The data object contains information about the difference between the images
+                            //         console.log(data.rawMisMatchPercentage) // Outputs a numerical value representing the similarity
+                            //     })
+                        }
+                        const db = getConnection()
+                        var imgsrc = 'http://localhost:8080/uploads/' + req.file.filename
+                        const selectQuery = 'SELECT userName FROM users WHERE userId = ?'
+                        const selectValue = [req.body.userId]
+                        const query = 'INSERT INTO images(imageId, file_src, userId, imageType) VALUES(?,?,?,?)'
+                        const imageId = uuidv4()
+                        const values = [imageId, imgsrc, req.body.userId, 0]
+                        db.query(selectQuery, selectValue, (err, result) => {
                             if (err) throw err
-                            console.log('file uploaded')
-                            result.data = { imageId, file_src: imgsrc, userId: req.body.userId, imageType: 0, likeCount: 0, userName }
-                            res.send(result)
-                            db.end()
+                            console.log(result)
+                            const userName = result[0].userName
+                            db.query(query, values, (err, result) => {
+                                if (err) throw err
+                                console.log('file uploaded')
+                                result.data = { imageId, file_src: imgsrc, userId: req.body.userId, imageType: 0, likeCount: 0, userName }
+                                res.send(result)
+                                db.end()
+                            })
                         })
                     })
-                })
-            } else {
-                res.status(401).send({ error: 'Unauthorized' })
-            }
-        })
+                } else {
+                    res.status(401).send({ error: 'Unauthorized' })
+                }
+            })
+            .catch((err) => {
+                res.status(500).send({ error: 'An error occurred while processing the request:' + err })
+            })
     } catch (error) {
         res.status(500).send({ error: 'An error occurred while processing the request:' + error })
     }
@@ -289,8 +295,11 @@ app.get('/getUserImages', (req, res) => {
 })
 
 app.delete('/deleteImage', (req, res) => {
-    if (!req.query.id) {
+    if (!req.query.imageId || !req.query.userId || !req.query.imageUserId) {
         return res.status(400).send({ error: 'Invalid request data' })
+    }
+    if (req.query.imageUserId !== req.query.userId) {
+        res.status(401).send({ error: 'Unauthorized' })
     }
     try {
         const idToken = req.headers.authorization.split('Bearer ')[1]
@@ -298,7 +307,7 @@ app.delete('/deleteImage', (req, res) => {
             if (isValidToken) {
                 const db = getConnection()
                 const query = 'DELETE FROM images WHERE images.imageId = ?'
-                const values = [req.query.id]
+                const values = [req.query.imageId]
                 db.query(query, values, (err, result) => {
                     if (err) {
                         throw err
@@ -527,8 +536,11 @@ app.get('/getForumTitle', (req, res) => {
 })
 
 app.delete('/deleteTopic', (req, res) => {
-    if (!req.query.id) {
+    if (!req.query.forumId || !req.query.userId || !req.query.forumUserId) {
         return res.status(400).send({ error: 'Invalid request data' })
+    }
+    if (req.query.forumUserId !== req.query.userId) {
+        res.status(401).send({ error: 'Unauthorized' })
     }
     try {
         const idToken = req.headers.authorization.split('Bearer ')[1]
@@ -536,7 +548,7 @@ app.delete('/deleteTopic', (req, res) => {
             if (isValidToken) {
                 const db = getConnection()
                 const query = 'DELETE FROM forum WHERE forumId = ?'
-                const values = [req.query.id]
+                const values = [req.query.forumId]
                 db.query(query, values, (err, result) => {
                     if (err) {
                         throw err
@@ -663,8 +675,11 @@ app.post('/reportComment', (req, res) => {
 })
 
 app.delete('/deleteComment', (req, res) => {
-    if (!req.query.forumId || !req.query.commentId) {
+    if (!req.query.forumId || !req.query.commentId || !req.query.commentUserId) {
         return res.status(400).send({ error: 'Invalid request data' })
+    }
+    if (req.query.forumUserId !== req.query.userId) {
+        res.status(401).send({ error: 'Unauthorized' })
     }
     try {
         const idToken = req.headers.authorization.split('Bearer ')[1]

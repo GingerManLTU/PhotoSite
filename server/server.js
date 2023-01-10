@@ -107,6 +107,13 @@ app.post('/upload', upload.single('file'), async (req, res) => {
         return res.status(400).send({ error: 'Only image files are allowed' })
     }
     if (req.file.size === 0) {
+        fs.unlink(req.file.path, (error) => {
+            if (error) {
+                console.error(error)
+            } else {
+                console.log(`Successfully deleted file: ${req.file.path}`)
+            }
+        })
         return res.status(400).send({ error: 'Empty files are not allowed' })
     }
     try {
@@ -130,6 +137,7 @@ app.post('/upload', upload.single('file'), async (req, res) => {
                             .map((file) => path.join('uploads', file))
 
                         const selectedImage = await Jimp.read(req.file.path)
+                        console.log(imagePaths)
 
                         for (const prevImage of imagePaths) {
                             console.log(req.file.path, prevImage)

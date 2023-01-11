@@ -23,6 +23,7 @@ import NavigationBar from '../components/NavigationBar.vue'
                         <button @click="changeImageType(image.imageId, image.imageType)" class="button-main">
                             <v-icon icon="mdi-swap-horizontal" size="small" @click="" />
                             {{ image.imageType ? 'Private' : 'Public' }}
+                            <v-tooltip activator="parent" location="bottom">Change your image type! Current type: {{ image.imageType ? 'Private' : 'Public' }}</v-tooltip>
                         </button>
                     </div>
                 </div>

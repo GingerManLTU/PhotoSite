@@ -38,7 +38,10 @@ import NavigationBar from '../components/NavigationBar.vue'
                                 <v-icon icon="mdi-thumb-up-outline" size="small" />
                                 {{ image.likeCount + (image.userLikeCount === 1 ? ' Like' : ' Likes') }}
                             </button>
-                            <div class="gallery-page__image-card-photo-wrapper-author">{{ image.userName }}</div>
+                            <div class="gallery-page__image-card-photo-wrapper-author">
+                                {{ image.userName }}
+                                <v-tooltip activator="parent" location="bottom">Author</v-tooltip>
+                            </div>
                         </div>
                     </div>
                 </div>

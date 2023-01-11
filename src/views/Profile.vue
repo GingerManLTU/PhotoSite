@@ -36,7 +36,12 @@
                             <br />
                             <v-spacer />
                             <br />
-                            <p>User points: {{ userPoints }}</p>
+                            <p>
+                                User points: {{ userPoints }}
+                                <v-tooltip activator="parent" location="bottom"
+                                    >Soon you will be able to join competition! Earn more points by getting likes and be ready for new feature in the future!
+                                </v-tooltip>
+                            </p>
                         </div>
                         <div class="profile-container__form">
                             <v-spacer />

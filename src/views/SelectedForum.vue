@@ -36,8 +36,12 @@
                                 <v-icon v-if="comment.isLoved === 0" icon="mdi-cards-heart-outline" size="x-large" @click="likeComment(comment.commentId)" />
                                 <v-icon v-else icon="mdi-cards-heart" size="x-large" @click="likeComment(comment.commentId)" />
                                 <div class="forum-container__comments-love">{{ comment.loveCount === 0 ? '' : comment.loveCount }}</div>
-                                <v-icon v-if="comment.reportCount === 1" class="forum-container__comments-buttons-space cursor-none" icon="mdi-alert" size="x-large" />
-                                <v-icon v-else class="forum-container__comments-buttons-space" icon="mdi-alert-outline" size="x-large" @click="reportComment(comment.commentId)" />
+                                <div>
+                                    <v-icon v-if="comment.reportCount === 1" class="forum-container__comments-buttons-space cursor-none" icon="mdi-alert" size="x-large" />
+                                    <v-icon v-else class="forum-container__comments-buttons-space" icon="mdi-alert-outline" size="x-large" @click="reportComment(comment.commentId)" />
+
+                                    <v-tooltip activator="parent" location="bottom">When comment will reach 5 reports, it will be automatically deleted!</v-tooltip>
+                                </div>
                                 <v-icon v-if="isUserOwner(comment.userId)" icon="mdi-delete" size="x-large" @click="deleteComment(comment.forumId, comment.commentId, comment.userId)" />
                             </div>
                         </div>

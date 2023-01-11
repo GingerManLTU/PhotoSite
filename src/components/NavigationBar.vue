@@ -10,6 +10,7 @@
             <ul v-show="!mobile" class="navigation-titles">
                 <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: 'Home' }">Home</router-link></li>
                 <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: 'Forums' }">Forums</router-link></li>
+                <li class="nagivation-li"><a class="navigation-link cursor-pointer" @click="openGallery">Your gallery</a></li>
                 <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: 'Profile' }">Profile</router-link></li>
             </ul>
 
@@ -17,6 +18,7 @@
                 <ul v-show="mobileNav" class="navigation-dropdown">
                     <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: 'Home' }">Home</router-link></li>
                     <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: 'Forums' }">Forums</router-link></li>
+                    <li class="nagivation-li"><a class="navigation-link cursor-pointer" @click="openGallery">Your gallery</a></li>
                     <li class="nagivation-li"><router-link class="navigation-link" :to="{ name: 'Profile' }">Profile</router-link></li>
                 </ul>
             </transition>
@@ -68,7 +70,7 @@ export default {
         },
         checkScreen() {
             this.windowWidth = window.innerWidth
-            if (this.windowWidth <= 750) {
+            if (this.windowWidth <= 990) {
                 this.mobile = true
                 return
             }

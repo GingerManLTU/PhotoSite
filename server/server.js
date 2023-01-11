@@ -10,13 +10,15 @@ const { v4: uuidv4 } = require('uuid')
 const fs = require('fs')
 const admin = require('firebase-admin')
 const serviceAccount = require('./app/config/serviceAccountKey.json')
-// const ssim = require('ssim.js')
+const Jimp = require('jimp')
 
+// Other comparing libraries
+
+// const ssim = require('ssim.js')
 // const { compare } = require('ssim')
 // const looksSame = require('looks-same')
 // const imageDiff = require('image-diff')
 // const pixelmatch = require('pixelmatch')
-const Jimp = require('jimp')
 // const { imageHash } = require('image-hash')
 // const resemble = require('resemblejs')
 // const { loadImage } = require('canvas')
@@ -24,7 +26,6 @@ const Jimp = require('jimp')
 // const sharp = require('sharp')
 // const jsfeat = require('jsfeat')
 // const imageSimilarity = require('image-similarity')
-// const { diff } = require('jimp/types')
 
 dotenv.config()
 
@@ -78,8 +79,9 @@ const getConnection = () => {
     db.connect(function (err) {
         if (err) {
             return console.error('error: ' + err.message)
+        } else {
+            console.log('Connected to the MySQL server.')
         }
-        console.log('Connected to the MySQL server.')
     })
     return db
 }
@@ -127,61 +129,68 @@ app.post('/upload', upload.single('file'), async (req, res) => {
                         if (err) {
                             console.error(err)
                             return
-                        }
-
-                        const imagePaths = files
-                            .filter((file) => {
-                                const fileExtension = file.split('.').pop()
-                                return imageExtensions.includes(fileExtension)
-                            })
-                            .map((file) => path.join('uploads', file))
-
-                        const selectedImage = await Jimp.read(req.file.path)
-                        console.log(imagePaths)
-
-                        for (const prevImage of imagePaths) {
-                            console.log(req.file.path, prevImage)
-
-                            const existingImage = await Jimp.read(prevImage)
-                            const distance = Jimp.distance(selectedImage, existingImage)
-                            console.log(distance)
-                            if (distance < 0.15 && req.file.path !== prevImage) {
-                                fs.unlink(req.file.path, (error) => {
-                                    if (error) {
-                                        console.error(error)
-                                    } else {
-                                        console.log(`Successfully deleted file: ${req.file.path}`)
-                                    }
+                        } else {
+                            const imagePaths = files
+                                .filter((file) => {
+                                    const fileExtension = file.split('.').pop()
+                                    return imageExtensions.includes(fileExtension)
                                 })
-                                return res.status(400).send({ error: 'This or a very similar image already exist...' })
-                            }
+                                .map((file) => path.join('uploads', file))
 
-                            // resemble(req.file.path)
-                            //     .compareTo(prevImage)
-                            //     .onComplete(function (data) {
-                            //         // The data object contains information about the difference between the images
-                            //         console.log(data.rawMisMatchPercentage) // Outputs a numerical value representing the similarity
-                            //     })
-                        }
-                        const db = getConnection()
-                        var imgsrc = 'http://localhost:8080/uploads/' + req.file.filename
-                        const selectQuery = 'SELECT userName FROM users WHERE userId = ?'
-                        const selectValue = [req.body.userId]
-                        const query = 'INSERT INTO images(imageId, file_src, userId, imageType) VALUES(?,?,?,?)'
-                        const imageId = uuidv4()
-                        const values = [imageId, imgsrc, req.body.userId, 0]
-                        db.query(selectQuery, selectValue, (err, result) => {
-                            if (err) throw err
-                            console.log(result)
-                            const userName = result[0].userName
-                            db.query(query, values, (err, result) => {
-                                if (err) throw err
-                                console.log('file uploaded')
-                                result.data = { imageId, file_src: imgsrc, userId: req.body.userId, imageType: 0, likeCount: 0, userName }
-                                res.send(result)
-                                db.end()
+                            const selectedImage = await Jimp.read(req.file.path)
+
+                            for (const prevImage of imagePaths) {
+                                console.log(req.file.path, prevImage)
+                                const existingImage = await Jimp.read(prevImage)
+                                const distance = Jimp.distance(selectedImage, existingImage)
+                                console.log(distance)
+                                if (distance < 0.15 && req.file.path !== prevImage) {
+                                    fs.unlink(req.file.path, (error) => {
+                                        if (error) {
+                                            console.error(error)
+                                        } else {
+                                            console.log(`Successfully deleted file: ${req.file.path}`)
+                                        }
+                                    })
+                                    return res.status(400).send({ error: 'This or a very similar image already exist...' })
+                                }
+
+                                // resemble(req.file.path)
+                                //     .compareTo(prevImage)
+                                //     .onComplete(function (data) {
+                                //         // The data object contains information about the difference between the images
+                                //         console.log(data.rawMisMatchPercentage) // Outputs a numerical value representing the similarity
+                                //     })
+                            }
+                            const db = getConnection()
+                            var imgsrc = 'http://localhost:8080/uploads/' + req.file.filename
+                            const selectQuery = 'SELECT userName FROM users WHERE userId = ?'
+                            const selectValue = [req.body.userId]
+                            const query = 'INSERT INTO images(imageId, file_src, userId, imageType) VALUES(?,?,?,?)'
+                            const imageId = uuidv4()
+                            const values = [imageId, imgsrc, req.body.userId, 0]
+                            db.query(selectQuery, selectValue, (err, result) => {
+                                if (err) {
+                                    console.log(err)
+                                    res.json(err)
+                                    db.end()
+                                } else {
+                                    console.log(result)
+                                    const userName = result[0].userName
+                                    db.query(query, values, (err, result) => {
+                                        if (err) {
+                                            console.log(err)
+                                            res.json(err)
+                                        } else {
+                                            console.log('file uploaded')
+                                            result.data = { imageId, file_src: imgsrc, userId: req.body.userId, imageType: 0, likeCount: 0, userName }
+                                            res.send(result)
+                                        }
+                                        db.end()
+                                    })
+                                }
                             })
-                        })
+                        }
                     })
                 } else {
                     res.status(401).send({ error: 'Unauthorized' })
@@ -204,8 +213,11 @@ app.post('/createUser', (req, res) => {
         const query = 'INSERT INTO users(userId, userName) VALUES(?,?)'
         const values = [req.body.uid, req.body.username]
         db.query(query, values, (err, result) => {
-            if (err) console.log(err)
-            console.log('User dublicated successfully')
+            if (err) {
+                console.log(err)
+            } else {
+                console.log('User dublicated successfully')
+            }
             db.end()
         })
     } catch (error) {
@@ -221,19 +233,23 @@ app.get('/getAllImages', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
             if (isValidToken) {
-                const db = getConnection()
-                const query =
-                    'SELECT images.imageId, images.file_src, images.userId, users.userName, Count(likeId) AS likeCount, (SELECT Count(likeId) FROM likes WHERE images.imageId = likes.imageId AND likes.userId = ?) AS userLikeCount FROM images LEFT JOIN likes ON images.imageId = likes.imageId LEFT JOIN users ON users.userId = images.userId WHERE images.imageType != 1 GROUP BY images.imageId ORDER BY images.createdAt DESC'
-                const values = [req.query.userId]
-                db.query(query, values, (err, results) => {
-                    if (err) {
-                        console.log(err)
-                        res.json(err)
-                    } else {
-                        res.json(results)
-                    }
-                    db.end()
-                })
+                try {
+                    const db = getConnection()
+                    const query =
+                        'SELECT images.imageId, images.file_src, images.userId, users.userName, Count(likeId) AS likeCount, (SELECT Count(likeId) FROM likes WHERE images.imageId = likes.imageId AND likes.userId = ?) AS userLikeCount FROM images LEFT JOIN likes ON images.imageId = likes.imageId LEFT JOIN users ON users.userId = images.userId WHERE images.imageType != 1 GROUP BY images.imageId ORDER BY images.createdAt DESC'
+                    const values = [req.query.userId]
+                    db.query(query, values, (err, results) => {
+                        if (err) {
+                            console.log(err)
+                            res.json(err)
+                        } else {
+                            res.json(results)
+                        }
+                        db.end()
+                    })
+                } catch (error) {
+                    console.error(`An error occurred while executing the query: ${error}`)
+                }
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
             }
@@ -251,19 +267,23 @@ app.get('/getPopularImages', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
             if (isValidToken) {
-                const db = getConnection()
-                const query =
-                    'SELECT images.imageId, images.file_src, images.userId, users.userName, COUNT(likeId) AS likeCount FROM images LEFT JOIN likes ON images.imageId = likes.imageId LEFT JOIN users ON users.userId = images.userId WHERE images.imageType != 1 GROUP BY images.imageId ORDER BY likeCount DESC LIMIT 10'
-                const values = [req.query.userId]
-                db.query(query, values, (err, results) => {
-                    if (err) {
-                        console.log(err)
-                        res.json(err)
-                    } else {
-                        res.json(results)
-                    }
-                    db.end()
-                })
+                try {
+                    const db = getConnection()
+                    const query =
+                        'SELECT images.imageId, images.file_src, images.userId, users.userName, COUNT(likeId) AS likeCount FROM images LEFT JOIN likes ON images.imageId = likes.imageId LEFT JOIN users ON users.userId = images.userId WHERE images.imageType != 1 GROUP BY images.imageId ORDER BY likeCount DESC LIMIT 10'
+                    const values = [req.query.userId]
+                    db.query(query, values, (err, results) => {
+                        if (err) {
+                            console.log(err)
+                            res.json(err)
+                        } else {
+                            res.json(results)
+                        }
+                        db.end()
+                    })
+                } catch (error) {
+                    res.status(500).send({ error: 'An error occurred while processing the request:' + error })
+                }
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
             }
@@ -281,18 +301,22 @@ app.get('/getUserImages', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.id).then((isValidToken) => {
             if (isValidToken) {
-                const db = getConnection()
-                const query = 'SELECT * FROM images WHERE userId = ? ORDER BY images.createdAt DESC'
-                const values = [req.query.id]
-                db.query(query, values, (err, results) => {
-                    if (err) {
-                        console.log(err)
-                        res.json(err)
-                    } else {
-                        res.json(results)
-                    }
-                    db.end()
-                })
+                try {
+                    const db = getConnection()
+                    const query = 'SELECT * FROM images WHERE userId = ? ORDER BY images.createdAt DESC'
+                    const values = [req.query.id]
+                    db.query(query, values, (err, results) => {
+                        if (err) {
+                            console.log(err)
+                            res.json(err)
+                        } else {
+                            res.json(results)
+                        }
+                        db.end()
+                    })
+                } catch (error) {
+                    res.status(500).send({ error: 'An error occurred while processing the request:' + error })
+                }
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
             }
@@ -313,18 +337,23 @@ app.delete('/deleteImage', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
             if (isValidToken) {
-                const db = getConnection()
-                const query = 'DELETE FROM images WHERE images.imageId = ?'
-                const values = [req.query.imageId]
-                db.query(query, values, (err, result) => {
-                    if (err) {
-                        throw err
-                    } else {
-                        res.send('Image deleted succ.')
-                        console.log('Image deleted successfully')
-                    }
-                    db.end()
-                })
+                try {
+                    const db = getConnection()
+                    const query = 'DELETE FROM images WHERE images.imageId = ?'
+                    const values = [req.query.imageId]
+                    db.query(query, values, (err, result) => {
+                        if (err) {
+                            console.log(err)
+                            res.json(err)
+                        } else {
+                            res.send('Image deleted succ.')
+                            console.log('Image deleted successfully')
+                        }
+                        db.end()
+                    })
+                } catch (error) {
+                    res.status(500).send({ error: 'An error occurred while processing the request:' + error })
+                }
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
             }
@@ -342,42 +371,55 @@ app.post('/likeImage', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.body.userId).then((isValidToken) => {
             if (isValidToken) {
-                const db = getConnection()
-                const query = 'SELECT COUNT(likeId) AS isSelected FROM likes WHERE userId = ? and imageId = ?'
-                const values = [req.body.userId, req.body.imageId]
-                let isSelected
-                db.query(query, values, (err, result) => {
-                    if (err) {
-                        throw err
-                    } else {
-                        isSelected = result[0].isSelected
-                        if (result[0].isSelected) {
-                            const query = 'DELETE FROM likes WHERE userId = ? and imageId = ?'
-                            const values = [req.body.userId, req.body.imageId]
-                            db.query(query, values, (err, result) => {
-                                if (err) {
-                                    throw err
-                                } else {
-                                    res.send('Image unliked')
-                                    console.log('Image deleted successfully')
-                                }
-                                db.end()
-                            })
+                try {
+                    const db = getConnection()
+                    const query = 'SELECT COUNT(likeId) AS isSelected FROM likes WHERE userId = ? and imageId = ?'
+                    const values = [req.body.userId, req.body.imageId]
+                    db.query(query, values, (err, result) => {
+                        if (err) {
+                            console.log(err)
+                            res.json(err)
                         } else {
-                            const query = 'INSERT INTO likes(likeId, userId, imageId) VALUES(?,?,?)'
-                            const values = [uuidv4(), req.body.userId, req.body.imageId]
-                            db.query(query, values, (err, result) => {
-                                if (err) {
-                                    throw err
-                                } else {
-                                    res.send('Image liked successfully.')
-                                    console.log('User liked image successfully!')
+                            if (result[0].isSelected) {
+                                try {
+                                    const query = 'DELETE FROM likes WHERE userId = ? and imageId = ?'
+                                    const values = [req.body.userId, req.body.imageId]
+                                    db.query(query, values, (err, result) => {
+                                        if (err) {
+                                            console.log(err)
+                                            res.json(err)
+                                        } else {
+                                            res.send('Image unliked')
+                                            console.log('Image deleted successfully')
+                                        }
+                                        db.end()
+                                    })
+                                } catch (error) {
+                                    res.status(500).send({ error: 'An error occurred while processing the request:' + error })
                                 }
-                                db.end()
-                            })
+                            } else {
+                                try {
+                                    const query = 'INSERT INTO likes(likeId, userId, imageId) VALUES(?,?,?)'
+                                    const values = [uuidv4(), req.body.userId, req.body.imageId]
+                                    db.query(query, values, (err, result) => {
+                                        if (err) {
+                                            console.log(err)
+                                            res.json(err)
+                                        } else {
+                                            res.send('Image liked successfully.')
+                                            console.log('User liked image successfully!')
+                                        }
+                                        db.end()
+                                    })
+                                } catch (error) {
+                                    res.status(500).send({ error: 'An error occurred while processing the request:' + error })
+                                }
+                            }
                         }
-                    }
-                })
+                    })
+                } catch (error) {
+                    res.status(500).send({ error: 'An error occurred while processing the request:' + error })
+                }
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
             }
@@ -395,23 +437,35 @@ app.post('/createForumTopic', (req, res) => {
         const idToken = req.headers.authorization.split('Bearer ')[1]
         verifyIdToken(idToken, req.body.userId).then((isValidToken) => {
             if (isValidToken) {
-                const db = getConnection()
-                const query = 'INSERT INTO forum(forumId, userId, forumTitle, forumDescription) VALUES(?,?,?,?)'
-                const forumId = uuidv4()
-                const values = [forumId, req.body.userId, req.body.title, req.body.description]
-                const selectQuery = 'SELECT userName FROM users WHERE userId = ?'
-                const selectValue = [req.body.userId]
-                db.query(selectQuery, selectValue, (err, result) => {
-                    if (err) throw err
-                    const userName = result[0].userName
-                    db.query(query, values, (err, result) => {
-                        if (err) throw err
-                        console.log('Forum created successfully')
-                        result.data = { forumId, userId: req.body.userId, forumTitle: req.body.title, forumDescription: req.body.description, userName, createdAt: new Date() }
-                        res.send(result)
+                try {
+                    const db = getConnection()
+                    const query = 'INSERT INTO forum(forumId, userId, forumTitle, forumDescription) VALUES(?,?,?,?)'
+                    const forumId = uuidv4()
+                    const values = [forumId, req.body.userId, req.body.title, req.body.description]
+                    const selectQuery = 'SELECT userName FROM users WHERE userId = ?'
+                    const selectValue = [req.body.userId]
+                    db.query(selectQuery, selectValue, (err, result) => {
+                        if (err) {
+                            console.log(err)
+                            res.json(err)
+                        } else {
+                            const userName = result[0].userName
+                            db.query(query, values, (err, result) => {
+                                if (err) {
+                                    console.log(err)
+                                    res.json(err)
+                                } else {
+                                    console.log('Forum created successfully')
+                                    result.data = { forumId, userId: req.body.userId, forumTitle: req.body.title, forumDescription: req.body.description, userName, createdAt: new Date() }
+                                    res.send(result)
+                                }
+                            })
+                        }
                         db.end()
                     })
-                })
+                } catch (error) {
+                    res.status(500).send({ error: 'An error occurred while processing the request:' + error })
+                }
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
             }
@@ -460,7 +514,8 @@ app.post('/addForumComment', (req, res) => {
                 const values = [uuidv4(), req.body.forumId, req.body.userId, req.body.forumComment]
                 db.query(query, values, (err, result) => {
                     if (err) {
-                        throw err
+                        console.log(err)
+                        res.json(err)
                     } else {
                         res.send('Comment added successfully.')
                         console.log('Image deleted successfully')
@@ -559,7 +614,8 @@ app.delete('/deleteTopic', (req, res) => {
                 const values = [req.query.forumId]
                 db.query(query, values, (err, result) => {
                     if (err) {
-                        throw err
+                        console.log(err)
+                        res.json(err)
                     } else {
                         res.send('Topic deleted succ.')
                         console.log('Topic deleted successfully')
@@ -588,7 +644,8 @@ app.post('/loveComment', (req, res) => {
                 const values = [req.body.userId, req.body.commentId]
                 db.query(query, values, (err, result) => {
                     if (err) {
-                        throw err
+                        console.log(err)
+                        res.json(err)
                     } else {
                         console.log(result)
                         if (result[0].isLoved) {
@@ -596,7 +653,8 @@ app.post('/loveComment', (req, res) => {
                             const values = [req.body.userId, req.body.commentId]
                             db.query(query, values, (err, result) => {
                                 if (err) {
-                                    throw err
+                                    console.log(err)
+                                    res.json(err)
                                 } else {
                                     res.send('Comment unloved')
                                     console.log('Comment unloved')
@@ -608,7 +666,8 @@ app.post('/loveComment', (req, res) => {
                             const values = [uuidv4(), req.body.userId, req.body.commentId]
                             db.query(query, values, (err, result) => {
                                 if (err) {
-                                    throw err
+                                    console.log(err)
+                                    res.json(err)
                                 } else {
                                     res.send('Comment liked successfully.')
                                     console.log('User loved comment successfully!')
@@ -641,7 +700,8 @@ app.post('/reportComment', (req, res) => {
                 const values = [req.body.userId, req.body.commentId, req.body.commentId]
                 db.query(query, values, (err, result) => {
                     if (err) {
-                        throw err
+                        console.log(err)
+                        res.json(err)
                     } else {
                         console.log(result)
                         if (result[0].reportCount === 4 && !result[0].isReported) {
@@ -649,7 +709,8 @@ app.post('/reportComment', (req, res) => {
                             const values = [req.body.commentId]
                             db.query(query, values, (err, result) => {
                                 if (err) {
-                                    throw err
+                                    console.log(err)
+                                    res.json(err)
                                 } else {
                                     res.send('Comment deleted because reached report limit')
                                     console.log('Comment deleted because reached report limit')
@@ -661,7 +722,8 @@ app.post('/reportComment', (req, res) => {
                             const values = [uuidv4(), req.body.userId, req.body.commentId]
                             db.query(query, values, (err, result) => {
                                 if (err) {
-                                    throw err
+                                    console.log(err)
+                                    res.json(err)
                                 } else {
                                     res.send('Comment reported successfully.')
                                     console.log('User reported comment successfully!')
@@ -698,7 +760,8 @@ app.delete('/deleteComment', (req, res) => {
                 const values = [req.query.forumId, req.query.commentId]
                 db.query(query, values, (err, result) => {
                     if (err) {
-                        throw err
+                        console.log(err)
+                        res.json(err)
                     } else {
                         res.send('Comment deleted succ.')
                         console.log('Comment deleted successfully')
@@ -756,7 +819,8 @@ app.post('/updateUsername', (req, res) => {
                 const values = [req.body.userName, req.body.userId]
                 db.query(query, values, (err, result) => {
                     if (err) {
-                        throw err
+                        console.log(err)
+                        res.json(err)
                     } else {
                         res.send('Username updated successfully.')
                         console.log('Username updated successfully')
@@ -786,7 +850,8 @@ app.delete('/deleteUser', (req, res) => {
 
                 db.query(query, values, (err, result) => {
                     if (err) {
-                        throw err
+                        console.log(err)
+                        res.json(err)
                     } else {
                         res.send('User deleted succ.')
                         console.log('User deleted successfully')
@@ -864,7 +929,8 @@ app.post('/updateImageType', (req, res) => {
                     const values = [req.body.imageId]
                     db.query(query, values, (err, result) => {
                         if (err) {
-                            throw err
+                            console.log(err)
+                            res.json(err)
                         } else {
                             res.send('Image type updated successfully.')
                             console.log('Image type updated successfully')
@@ -876,7 +942,8 @@ app.post('/updateImageType', (req, res) => {
                     const values = [req.body.imageId]
                     db.query(query, values, (err, result) => {
                         if (err) {
-                            throw err
+                            console.log(err)
+                            res.json(err)
                         } else {
                             res.send('Image type updated successfully.')
                             console.log('Image type updated successfully')

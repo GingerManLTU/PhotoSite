@@ -111,6 +111,9 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     if (req.fileValidationError) {
         return res.status(400).send({ error: 'Only image files are allowed' })
     }
+    if (!req.file) {
+        return res.status(400).send({ error: 'Empty files are not allowed' })
+    }
     if (req.file.size === 0) {
         fs.unlink(req.file.path, (error) => {
             if (error) {

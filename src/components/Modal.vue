@@ -9,7 +9,7 @@
                 <v-card-text>
                     <label>
                         <span>Enter title</span>
-                        <input style="margin: 24px" type="text" v-model="title" placeholder="Tips for..." required />
+                        <input style="margin: 24px; border-bottom: 1px solid #ccc" type="text" v-model="title" placeholder="Tips for..." required />
                     </label>
                     <v-spacer />
                     <label>

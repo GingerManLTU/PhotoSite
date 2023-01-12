@@ -98,7 +98,7 @@ const verifyIdToken = (idToken, userId) => {
         .verifyIdToken(idToken)
         .then((decodedToken) => {
             const uid = decodedToken.uid
-            console.log((uid === userId) + '  validation')
+            // console.log((uid === userId) + '  validation')
             return uid === userId
         })
         .catch((error) => {
@@ -126,7 +126,6 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     }
     try {
         const idToken = req.headers.authorization.split('Bearer ')[1]
-        console.log(idToken, req.body.userId)
         verifyIdToken(idToken, req.body.userId)
             .then((isValidToken) => {
                 if (isValidToken) {
@@ -181,7 +180,6 @@ app.post('/upload', upload.single('file'), async (req, res) => {
                                     res.json(err)
                                     db.end()
                                 } else {
-                                    console.log(result)
                                     const userName = result[0].userName
                                     db.query(query, values, (err, result) => {
                                         if (err) {
@@ -653,7 +651,6 @@ app.post('/loveComment', (req, res) => {
                         console.log(err)
                         res.json(err)
                     } else {
-                        console.log(result)
                         if (result[0].isLoved) {
                             const query = 'DELETE FROM lovedComments WHERE userId = ? and commentId = ?'
                             const values = [req.body.userId, req.body.commentId]
@@ -709,7 +706,6 @@ app.post('/reportComment', (req, res) => {
                         console.log(err)
                         res.json(err)
                     } else {
-                        console.log(result)
                         if (result[0].reportCount === 4 && !result[0].isReported) {
                             const query = 'DELETE FROM forumComments WHERE commentId = ?'
                             const values = [req.body.commentId]
@@ -851,18 +847,36 @@ app.delete('/deleteUser', (req, res) => {
         verifyIdToken(idToken, req.query.userId).then((isValidToken) => {
             if (isValidToken) {
                 const db = getConnection()
+                const imageQuery = `SELECT file_src FROM images WHERE userId = ?`
                 const query = 'DELETE FROM users WHERE userId = ?'
                 const values = [req.query.userId]
 
-                db.query(query, values, (err, result) => {
+                db.query(imageQuery, values, (err, result) => {
                     if (err) {
                         console.log(err)
                         res.json(err)
                     } else {
-                        res.send('User deleted succ.')
-                        console.log('User deleted successfully')
+                        const file_src_list = result.map((item) => item.file_src.split('8080/')[1])
+                        db.query(query, values, (err, result) => {
+                            if (err) {
+                                console.log(err)
+                                res.json(err)
+                            } else {
+                                res.send('User deleted succ.')
+                                console.log('User deleted successfully')
+                                for (imagesPath of file_src_list) {
+                                    fs.unlink(imagesPath, (error) => {
+                                        if (error) {
+                                            console.error(error)
+                                        } else {
+                                            console.log(`Successfully deleted file: ${imagesPath}`)
+                                        }
+                                    })
+                                }
+                            }
+                            db.end()
+                        })
                     }
-                    db.end()
                 })
             } else {
                 res.status(401).send({ error: 'Unauthorized' })
@@ -921,7 +935,6 @@ app.get('/getUserPoints', (req, res) => {
 })
 
 app.post('/updateImageType', (req, res) => {
-    console.log(req.body)
     if (!req.body.imageId || !req.body.userId || req.body.imageType === null) {
         return res.status(400).send({ error: 'Invalid request data' })
     }

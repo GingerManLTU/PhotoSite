@@ -89,6 +89,9 @@ const getConnection = () => {
 app.use(cors())
 app.use(express.json())
 
+const db = getConnection()
+db.end()
+
 const verifyIdToken = (idToken, userId) => {
     return admin
         .auth()
@@ -748,7 +751,7 @@ app.delete('/deleteComment', (req, res) => {
     if (!req.query.forumId || !req.query.commentId || !req.query.commentUserId) {
         return res.status(400).send({ error: 'Invalid request data' })
     }
-    if (req.query.forumUserId !== req.query.userId) {
+    if (req.query.commentUserId !== req.query.userId) {
         res.status(401).send({ error: 'Unauthorized' })
     }
     try {
